@@ -1,0 +1,1 @@
+Design tokens as CSS custom properties, defined via @theme in app/globals.css (Tailwind v4 — no tokens.ts/JS config). This folder holds any non-CSS token exports (e.g. a JS map of the same values for chart color scales) if one becomes necessary.
