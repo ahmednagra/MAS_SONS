@@ -13,7 +13,7 @@ export default async function AdminUnitPage({ params }: { params: Promise<{ id: 
   return (
     <div>
       <UnitDetails unit={unit} />
-      <PriceForm unitId={unit.id} />
+      <PriceForm unitId={id} />
     </div>
   );
 }

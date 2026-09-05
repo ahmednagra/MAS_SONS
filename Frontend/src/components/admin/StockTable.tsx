@@ -1,15 +1,16 @@
 'use client';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useStockList } from '@/hooks/queries';
-import { Table, TableHead, TableHeaderCell, TableRow, TableCell, Pagination } from '@/components/ui';
+import { Table, TableHead, TableHeaderCell, TableRow, TableCell } from '@/components/ui';
 
 const PAGE_SIZE = 20;
 
 export function StockTable() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const page = Number(searchParams.get('page') ?? '1');
-  const { data, isLoading, isError } = useStockList({ page, limit: PAGE_SIZE });
+  const cursor = searchParams.get('cursor') ? Number(searchParams.get('cursor')) : undefined;
+  const { data, isLoading, isError } = useStockList({ cursor, limit: PAGE_SIZE });
 
   if (isLoading) return <p className="text-sub">Loading…</p>;
   if (isError || !data) return <p className="text-accent">Failed to load stock.</p>;
@@ -30,13 +31,22 @@ export function StockTable() {
                   {unit.year} {unit.make} {unit.model}
                 </Link>
               </TableCell>
-              <TableCell className="tabular-nums">${unit.price.toLocaleString('en-US')}</TableCell>
+              <TableCell className="tabular-nums">${unit.price_usd.toLocaleString('en-US')}</TableCell>
               <TableCell className="capitalize">{unit.status.replace('_', ' ')}</TableCell>
             </TableRow>
           ))}
         </tbody>
       </Table>
-      <Pagination page={page} totalPages={Math.max(1, Math.ceil(data.total / PAGE_SIZE))} hrefForPage={(p) => `/admin/stock?page=${p}`} />
+      {data.next_cursor != null && (
+        <nav className="flex justify-center">
+          <button
+            className="rounded-sm border border-line px-4 py-2 text-sm font-medium text-ink hover:bg-paper"
+            onClick={() => router.push(`/admin/stock?cursor=${data.next_cursor}`)}
+          >
+            Next →
+          </button>
+        </nav>
+      )}
     </div>
   );
 }

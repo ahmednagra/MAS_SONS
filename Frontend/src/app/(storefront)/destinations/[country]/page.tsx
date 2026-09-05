@@ -9,7 +9,9 @@ async function getCachedDestination(country: string) {
   cacheLife('days');
   cacheTag(`destination:${country}`);
   const info = await getDestinationInfoServer(country);
-  const { items } = await searchStockServer({ shippableTo: country, limit: 24 });
+  // No per-unit shipping restriction exists in the schema yet — every unit ships
+  // everywhere, so this is a general stock sample, not one filtered by destination.
+  const { items } = await searchStockServer({ limit: 24 });
   return { info, featured: items };
 }
 

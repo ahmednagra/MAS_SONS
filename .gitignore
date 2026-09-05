@@ -20,3 +20,7 @@ dist/
 .DS_Store
 *.pem
 npm-debug.log*
+
+# Backend runtime artifacts (app/Utils/Logger.py writes here)
+Backend/logs/
+*.log

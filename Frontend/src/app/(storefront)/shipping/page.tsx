@@ -1,6 +1,4 @@
 import { PageHeader } from '@/components/layout/PageHeader';
-import { ShippingMap } from '@/components/home/ShippingMap';
-import { MOCK_SHIPPING_LANES } from '@/lib/mock-data/units';
 
 export const metadata = {
   title: 'Shipping — M.A.S & SONS',
@@ -27,10 +25,6 @@ export default function ShippingPage() {
         title="From a Japanese port to yours"
         description="Every quote is priced as FOB, C&F or CIF — pick the term that matches how much of the journey you want us to arrange."
       />
-
-      <section className="mb-14">
-        <ShippingMap lanes={MOCK_SHIPPING_LANES} />
-      </section>
 
       <section className="mb-14">
         <h2 className="mb-5 text-2xl font-semibold tracking-tight text-ink">Incoterms, plainly</h2>

@@ -4,10 +4,10 @@ import { updateTag } from 'next/cache';
 import { z } from 'zod';
 import { updateUnitServer } from '@/services/stock/stock.server';
 
-const Schema = z.object({ price: z.number().positive() });
+const Schema = z.object({ price_usd: z.number().positive() });
 
 export async function updateUnitPrice(unitId: string, formData: FormData) {
-  const parsed = Schema.safeParse({ price: Number(formData.get('price')) });
+  const parsed = Schema.safeParse({ price_usd: Number(formData.get('price')) });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
 
   const authToken = (await cookies()).get('access_token')?.value;

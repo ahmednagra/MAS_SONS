@@ -79,7 +79,11 @@ NOTIFICATION_TYPES: dict[str, dict] = {
     "sourcing_request.sourced":  { "applicable_recipient": "buyer", ... },
     "buyback_lead.received":     { "applicable_recipient": "staff", ... },
     "saved_search.new_match":    { "applicable_recipient": "buyer", "default_channels": {"email", "in_app"}, ... },
-    "stock.shipment_update":     { "applicable_recipient": "buyer", "priority": "high", ... },
+    "stock.shipment_update":     {
+        "category": "order", "priority": "high",
+        "applicable_recipient": "buyer", "default_channels": {"email", "in_app"},
+        "email_template": "orders/shipment_update", "retention_days": 365,
+    },
 }
 ```
 
@@ -99,6 +103,13 @@ schema migration to gain their own preference row.
 - **Critical-priority notifications** (a shipment update on a request the buyer is actively waiting
   on) bypass quiet hours but never bypass an explicit unsubscribe or `is_email_paused` — a shipment
   ETA is not urgent enough to override someone's own opt-out.
+- **`marketing_opt_in` is a separate flag, not a channel in `channel_preferences`.** The Feature
+  Audit's Notifications module calls out marketing/promotional messaging as needing its own opt-in,
+  kept apart from transactional and order-status updates — a buyer who opts out of marketing still
+  gets their shipment updates, and disabling a transactional channel never silently disables
+  marketing too. `NotificationPreference.marketing_opt_in` defaults to `FALSE`; nothing in
+  `NOTIFICATION_TYPES` today is categorized as marketing, so this is provisioned ahead of the first
+  campaign feature rather than wired to a live send path yet.
 
 ## 5. Idempotency and deduplication
 
@@ -139,7 +150,7 @@ CREATE TABLE notifications (
     title             TEXT NOT NULL,
     body              TEXT NOT NULL,
     action_url        TEXT,
-    source_entity_type TEXT,        -- 'quote_request' | 'sourcing_request' | 'buyback_lead' | 'unit'
+    source_entity_type TEXT,        -- 'quote_request' | 'sourcing_request' | 'buyback_lead' | 'unit' | 'order'
     source_entity_id  BIGINT,       -- no FK — polymorphic by design, same as tags/feedback-style references
     status            TEXT NOT NULL DEFAULT 'unread' CHECK (status IN ('unread','read','archived')),
     read_at           TIMESTAMPTZ,
@@ -162,6 +173,29 @@ points to. The notification itself is disposable and hard-deleted by retention.
 ### `NotificationPreference`
 
 One row per registered user. Guest buyers never get one (see §4).
+
+```sql
+CREATE TABLE notification_preferences (
+    id                    BIGSERIAL PRIMARY KEY,
+    user_id               BIGINT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    channel_preferences   JSONB NOT NULL DEFAULT '{}',
+    is_email_paused       BOOLEAN NOT NULL DEFAULT FALSE,
+    marketing_opt_in      BOOLEAN NOT NULL DEFAULT FALSE,
+    quiet_hours_start     TIME,
+    quiet_hours_end       TIME,
+    timezone              TEXT NOT NULL DEFAULT 'UTC',
+    digest_frequency      TEXT NOT NULL DEFAULT 'realtime'
+                              CHECK (digest_frequency IN ('realtime', 'daily', 'weekly', 'never')),
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at            TIMESTAMPTZ,      -- soft delete, matching every other authoritative table (databaseschema.md conventions)
+    deleted_by            BIGINT REFERENCES users(id)
+);
+```
+
+Unlike `notifications`/`email_logs`, this table is a settings record (one row per user), not an
+event projection, so it follows the standard full-audit-trail column set rather than the
+retention-only exception those two tables use.
 
 ### Retention — triggered by infrastructure, not an in-process timer
 

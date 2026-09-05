@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const unit = await getCachedUnit(slug);
   if (!unit) return {};
   return {
-    title: `${unit.year} ${unit.make} ${unit.model} — $${unit.price.toLocaleString('en-US')} FOB Japan`,
+    title: `${unit.year} ${unit.make} ${unit.model} — $${unit.price_usd.toLocaleString('en-US')} FOB Japan`,
     description: unit.description.slice(0, 155),
     openGraph: { images: unit.images[0] ? [unit.images[0].url] : [] },
   };

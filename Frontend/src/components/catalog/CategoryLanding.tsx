@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ResultsGrid } from '@/components/stock/ResultsGrid';
 import { Button } from '@/components/ui';
-import type { Unit, UnitCategory } from '@/types/stock';
+import type { UnitCategory, UnitSummary } from '@/types/stock';
 
 export function CategoryLanding({
   category, eyebrow, title, description, subtypes, units,
@@ -12,7 +12,7 @@ export function CategoryLanding({
   title: string;
   description: string;
   subtypes: string[];
-  units: Unit[];
+  units: UnitSummary[];
 }) {
   return (
     <main className="mx-auto max-w-[1200px] px-4 py-16">

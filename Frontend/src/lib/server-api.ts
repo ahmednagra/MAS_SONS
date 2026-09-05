@@ -2,7 +2,7 @@ import { env } from '@/lib/env';
 import type { ApiResult } from '@/lib/api-result';
 
 class ServerApiClient {
-  constructor(private baseUrl = env.API_BASE_URL) {}
+  constructor(private baseUrl = `${env.API_BASE_URL}/api/v0`) {}
 
   private async request<T>(endpoint: string, options: RequestInit & { authToken?: string | null } = {}): Promise<ApiResult<T>> {
     const { authToken, ...rest } = options;

@@ -35,19 +35,18 @@ export function Hero() {
           </select>
         </label>
         <label className="border-b border-line p-3 sm:border-b-0 sm:border-r">
-          <span className="block text-[10px] font-semibold uppercase tracking-wider text-sub">Destination port</span>
-          <select name="shippableTo" className="mt-1 w-full bg-transparent text-sm font-medium text-ink focus-visible:outline-none">
-            <option value="">Any port</option>
-            <option value="KE">Mombasa, Kenya</option>
-            <option value="ZA">Durban, South Africa</option>
-            <option value="AE">Jebel Ali, UAE</option>
-            <option value="PK">Karachi, Pakistan</option>
-          </select>
+          <span className="block text-[10px] font-semibold uppercase tracking-wider text-sub">Make</span>
+          <input
+            name="make"
+            type="text"
+            placeholder="e.g. Toyota"
+            className="mt-1 w-full bg-transparent text-sm font-medium text-ink placeholder:text-sub focus-visible:outline-none"
+          />
         </label>
         <label className="p-3">
           <span className="block text-[10px] font-semibold uppercase tracking-wider text-sub">Budget (USD)</span>
           <input
-            name="priceMax"
+            name="price_max"
             type="number"
             placeholder="Up to $30,000"
             className="mt-1 w-full bg-transparent text-sm font-medium text-ink placeholder:text-sub focus-visible:outline-none"

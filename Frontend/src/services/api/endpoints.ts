@@ -2,8 +2,10 @@
 export const ENDPOINTS = {
   STOCK: {
     LIST: '/stock',
+    // DETAIL/UPDATE not yet backed by any route; will need a path distinct from
+    // BY_SLUG once built, since both currently render as `/stock/${x}`.
     DETAIL: (id: string) => `/stock/${id}`,
-    BY_SLUG: (slug: string) => `/stock/slug/${slug}`,
+    BY_SLUG: (slug: string) => `/stock/${slug}`,
     UPDATE: (id: string) => `/stock/${id}`,
   },
   QUOTE_REQUESTS: {

@@ -84,7 +84,10 @@ important reliability guarantee in this subsystem — an email provider outage m
   (admin), `sourcing_requests/confirmation`, `sourcing_requests/staff_alert`,
   `buyback_leads/confirmation` (Japanese — this is the one customer-facing template that needs a
   native speaker's review, not a machine translation, since it's a Japanese seller's first
-  impression of the business), `buyback_leads/staff_alert`, `notifications/saved_search_digest`.
+  impression of the business), `buyback_leads/staff_alert`, `notifications/saved_search_digest`,
+  `orders/shipment_update` (buyer — the `stock.shipment_update` notification type's email leg;
+  `databaseschema.md` §3 names this the update the buyer most needs while waiting weeks for a unit
+  to cross an ocean, so it ships at launch alongside the confirmation templates, not deferred).
 
 ## 5. Data model — `EmailLog`
 
