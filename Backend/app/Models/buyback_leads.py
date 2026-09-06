@@ -1,5 +1,4 @@
 # app/Models/buyback_leads.py
-
 # buyback_leads — domestic sell-to-us leads (databaseschema.md §3).
 from sqlalchemy import Column, BigInteger, Text, TIMESTAMP, ForeignKey, CheckConstraint, Index, func
 from sqlalchemy.orm import relationship
@@ -8,10 +7,7 @@ from app.Models.base import Base
 
 
 class BuybackLead(Base):
-    """Domestic seller-facing 'sell to us' leads — name, phone, description, photos;
-    no account, no email. LINE/phone-first by design — not the GuestContact shape used
-    by the two buyer-facing forms.
-    """
+    """Domestic seller-facing 'sell to us' leads — name, phone, description, photos; no account, no email."""
 
     __tablename__ = "buyback_leads"
 

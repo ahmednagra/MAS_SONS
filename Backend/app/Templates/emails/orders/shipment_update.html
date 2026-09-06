@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 style="margin-top:0;">Shipment update — order #{{ order_id }}</h2>
+<p>Hi {{ contact_name }}, your order's shipping status is now:</p>
+<p style="font-size:20px;font-weight:bold;text-transform:capitalize;">{{ shipping_status|replace("_", " ") }}</p>
+<p>Destination: {{ destination_country }}</p>
+{% endblock %}

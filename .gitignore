@@ -24,3 +24,6 @@ npm-debug.log*
 # Backend runtime artifacts (app/Utils/Logger.py writes here)
 Backend/logs/
 *.log
+
+# Backend local file storage (LocalStorageProvider — dev-only substitute for GCS)
+Backend/storage/

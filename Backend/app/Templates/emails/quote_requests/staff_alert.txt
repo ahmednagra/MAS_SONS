@@ -1,0 +1,5 @@
+New quote request #{{ quote_request_id }}
+
+{{ contact_name }} ({{ contact_email }}) requested a quote for {{ unit_make }} {{ unit_model }} ({{ unit_year }}).
+Destination: {{ destination_country }}
+Incoterm: {{ incoterm }}

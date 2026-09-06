@@ -1,5 +1,4 @@
 # app/Models/__init__.py
-
 # Single import surface for every ORM model — also what alembic/env.py imports for autogenerate.
 
 from app.Models.base import Base

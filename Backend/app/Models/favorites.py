@@ -1,5 +1,4 @@
 # app/Models/favorites.py
-
 # favorites (databaseschema.md §4).
 from sqlalchemy import Column, BigInteger, TIMESTAMP, ForeignKey, Index, func
 from sqlalchemy.orm import relationship
@@ -8,12 +7,7 @@ from app.Models.base import Base
 
 
 class Favorite(Base):
-    """A buyer's saved/favorited units.
-
-    UNIQUE(user_id, unit_id) is table-wide, not partial on deleted_at — re-favoriting
-    after an unfavorite restores the existing soft-deleted row rather than inserting
-    a new one.
-    """
+    """A buyer's saved/favorited units."""
 
     __tablename__ = "favorites"
 

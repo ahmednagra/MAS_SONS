@@ -1,6 +1,7 @@
 # app/Schemas/admin_logs.py
 from datetime import datetime
 from typing import Any, Optional
+from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 
 
@@ -36,7 +37,7 @@ class WebSocketConnectionLogResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    connection_id: str
+    connection_id: UUID
     user_id: Optional[int] = None
     role: str
     connected_at: datetime

@@ -1,5 +1,4 @@
 # app/Models/magic_link_tokens.py
-
 # magic_link_tokens (databaseschema.md §1).
 from sqlalchemy import Column, BigInteger, Text, TIMESTAMP, CheckConstraint, Index, func
 from sqlalchemy.dialects.postgresql import INET
@@ -8,10 +7,7 @@ from app.Models.base import Base
 
 
 class MagicLinkToken(Base):
-    """Single-use passwordless login / email-verification tokens.
-
-    No soft delete — lifecycle is fully described by expires_at / consumed_at.
-    """
+    """Single-use passwordless login / email-verification tokens."""
 
     __tablename__ = "magic_link_tokens"
 

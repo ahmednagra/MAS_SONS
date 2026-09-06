@@ -1,8 +1,5 @@
 # routes/api/v0/auth.py
-
 # Auth endpoints — multi-provider login, refresh rotation (databaseschema.md §1).
-# Route layer: path/method/response_model/dependency wiring only — every operation
-# is one line delegating to AuthController (codingconventions.md §3).
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 

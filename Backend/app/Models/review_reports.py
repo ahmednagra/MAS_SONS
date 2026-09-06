@@ -1,5 +1,4 @@
 # app/Models/review_reports.py
-
 # review_reports — abuse/moderation reports (databaseschema.md §5).
 from sqlalchemy import Column, BigInteger, Text, TIMESTAMP, ForeignKey, Index, func
 from sqlalchemy.dialects.postgresql import CITEXT
@@ -9,9 +8,7 @@ from app.Models.base import Base
 
 
 class ReviewReport(Base):
-    """Abuse/moderation reports against a published review. A report never auto-hides
-    the review — only staff acting on it (setting reviews.status = 'rejected') does.
-    """
+    """Abuse/moderation reports against a published review."""
 
     __tablename__ = "review_reports"
 

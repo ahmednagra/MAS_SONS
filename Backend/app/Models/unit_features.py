@@ -1,5 +1,4 @@
 # app/Models/unit_features.py
-
 # unit_features — unit↔feature confirmation junction (databaseschema.md §2).
 from sqlalchemy import Column, BigInteger, TIMESTAMP, ForeignKey, Index, func
 from sqlalchemy.orm import relationship
@@ -8,12 +7,7 @@ from app.Models.base import Base
 
 
 class UnitFeature(Base):
-    """Many-to-many: which features apply to which unit.
-
-    Composite PK (unit_id, feature_id). Re-confirming a retracted feature restores the
-    existing soft-deleted row (deleted_at = NULL) rather than inserting a duplicate —
-    the PK does not special-case deleted_at.
-    """
+    """Many-to-many: which features apply to which unit."""
 
     __tablename__ = "unit_features"
 

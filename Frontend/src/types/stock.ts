@@ -1,13 +1,17 @@
 // Mirrors the backend API shape exactly (app/Schemas/stock.py) — snake_case, no case-mapping layer.
+import type { Destination } from './destinations';
+
 export type UnitCategory = 'vehicle' | 'equipment';
 export type SteeringPosition = 'LHD' | 'RHD';
 export type AuctionGrade = '5' | '4.5' | '4' | '3.5' | '3' | 'R' | 'RA';
 export type UnitStatus = 'in_stock' | 'sold' | 'sourcing';
+export type PhotoType = 'exterior' | 'interior' | 'engine_bay' | 'undercarriage' | 'odometer' | 'other';
+export type FeatureCategory = 'comfort' | 'safety' | 'exterior' | 'mechanical' | 'equipment_attachment';
 
 export interface UnitImage {
   id: number;
   url: string;
-  photo_type: 'exterior' | 'interior' | 'engine_bay' | 'undercarriage' | 'odometer' | 'other';
+  photo_type: PhotoType;
   alt_text?: string | null;
   sort_order: number;
 }
@@ -15,9 +19,10 @@ export interface UnitImage {
 export interface Feature {
   id: number;
   name: string;
-  category: string;
+  category: FeatureCategory;
 }
 
+// UnitSummaryResponse
 export interface UnitSummary {
   id: number;
   slug: string;
@@ -33,11 +38,15 @@ export interface UnitSummary {
   operating_hours?: number | null;
   auction_grade: AuctionGrade;
   status: UnitStatus;
+  steering_position?: SteeringPosition | null;
+  transmission?: string | null;
+  fuel_type?: string | null;
+  created_at: string;
   thumbnail_url?: string | null;
 }
 
+// UnitResponse
 export interface Unit extends UnitSummary {
-  steering_position?: SteeringPosition | null;
   repair_history: boolean;
   one_owner?: boolean | null;
   auction_sheet_url?: string | null;
@@ -45,18 +54,15 @@ export interface Unit extends UnitSummary {
   engine?: string | null;
   displacement_cc?: number | null;
   drivetrain?: string | null;
-  fuel_type?: string | null;
-  transmission?: string | null;
   description: string;
-  created_at: string;
   updated_at: string;
   images: UnitImage[];
   features: Feature[];
 }
 
-export interface UpdateUnitInput {
-  price_usd?: number;
-  status?: UnitStatus;
+// UnitPriceUpdate (app/Schemas/stock.py) — the only field PATCH /admin/stock/{id}/price accepts.
+export interface UnitPriceUpdate {
+  price_usd: number;
 }
 
 export interface StockSearchParams {
@@ -81,4 +87,74 @@ export interface StockSearchParams {
 export interface StockListResponse {
   items: UnitSummary[];
   next_cursor?: number | null;
+}
+
+// ---- GET /stock/facets (StockFacetsResponse) ---------------------------------
+
+export interface FacetCount {
+  value: string;
+  count: number;
+}
+
+export interface StockFacets {
+  total: number;
+  vehicles: number;
+  equipment: number;
+  /** Top makes by in-stock count, capped server-side. */
+  makes: FacetCount[];
+  /** Top body types by in-stock count, capped server-side. */
+  body_types: FacetCount[];
+  /** Only values present in stock (at most LHD/RHD). */
+  steering_positions: FacetCount[];
+  fuel_types: FacetCount[];
+  grades: FacetCount[];
+  year_min?: number | null;
+  year_max?: number | null;
+  price_min?: number | null;
+  price_max?: number | null;
+}
+
+// ---- GET /stock/{slug}/insights (UnitInsightsResponse) ----------------------
+
+export interface GradeCount {
+  grade: AuctionGrade;
+  count: number;
+}
+
+export interface PricePoint {
+  id: number;
+  slug: string;
+  year: number;
+  price_usd: number;
+  /** mileage_km for vehicles, operating_hours for equipment — see MarketPosition.usage_unit */
+  usage?: number | null;
+  auction_grade: AuctionGrade;
+  is_current: boolean;
+}
+
+export type MarketScope = 'model' | 'body_type' | 'category';
+
+export interface MarketPosition {
+  scope: MarketScope;
+  label: string;
+  peer_count: number;
+  price_min?: number | null;
+  price_median?: number | null;
+  price_max?: number | null;
+  price_avg?: number | null;
+  usage_avg?: number | null;
+  usage_unit: 'km' | 'hrs';
+  /** % of peers priced at or below this unit (0–100) */
+  price_percentile?: number | null;
+  /** % of peers with usage at or below this unit (0–100) */
+  usage_percentile?: number | null;
+  grade_distribution: GradeCount[];
+}
+
+export interface UnitInsights {
+  market: MarketPosition;
+  comparables: UnitSummary[];
+  price_points: PricePoint[];
+  destinations: Destination[];
+  feature_catalog: Feature[];
 }

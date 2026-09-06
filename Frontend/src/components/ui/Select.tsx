@@ -2,7 +2,7 @@ import { ComponentProps } from 'react';
 
 export function Select({ className = '', ...props }: ComponentProps<'select'>) {
   return (
-    <select
+    <select suppressHydrationWarning
       className={`rounded-sm border border-line bg-surface px-3 py-2 text-sm text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 ${className}`}
       {...props}
     />

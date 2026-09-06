@@ -1,0 +1,3 @@
+New buyback lead #{{ buyback_lead_id }}
+
+{{ name }} ({{ phone }}) wants to sell: {{ description }}

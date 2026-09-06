@@ -1,0 +1,4 @@
+Shipment update — order #{{ order_id }}
+
+Hi {{ contact_name }}, your order's shipping status is now: {{ shipping_status|replace("_", " ") }}
+Destination: {{ destination_country }}

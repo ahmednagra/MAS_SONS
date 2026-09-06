@@ -1,5 +1,4 @@
 # app/Models/sourcing_requests.py
-
 # sourcing_requests — 'Request a Car' (databaseschema.md §3).
 from sqlalchemy import Column, BigInteger, Text, Numeric, TIMESTAMP, ForeignKey, CheckConstraint, Index, func
 from sqlalchemy.dialects.postgresql import CITEXT
@@ -9,10 +8,7 @@ from app.Models.base import Base
 
 
 class SourcingRequest(Base):
-    """'Request a Car' — buyer describes what they want when nothing in stock matches;
-    staff sources it via auction. Deliberately not a nullable-unit_id row in
-    quote_requests — a sourcing request has no unit to point at.
-    """
+    """'Request a Car' — buyer describes what they want when nothing in stock matches; staff sources it via auction."""
 
     __tablename__ = "sourcing_requests"
 

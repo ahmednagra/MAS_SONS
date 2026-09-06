@@ -1,0 +1,6 @@
+Thanks, {{ contact_name }} — we're sourcing your request.
+
+Request: {{ model_description }}{% if make %} ({{ make }}){% endif %}
+Reference: #{{ sourcing_request_id }}
+
+Our team will search the next matching auctions and follow up at this address.

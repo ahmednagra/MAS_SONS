@@ -1,7 +1,7 @@
 # app/Schemas/review.py
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 
 class ReviewPhotoResponse(BaseModel):
@@ -19,6 +19,11 @@ class ReviewCreate(BaseModel):
     rating: Optional[int] = None
     body: str
     photo_urls: list[str] = []
+
+    @field_validator("destination_country")
+    @classmethod
+    def _normalize_country_code(cls, v: Optional[str]) -> Optional[str]:
+        return v.upper() if v else v
 
 
 class ReviewResponse(BaseModel):

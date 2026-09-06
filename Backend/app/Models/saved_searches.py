@@ -1,5 +1,4 @@
 # app/Models/saved_searches.py
-
 # saved_searches (databaseschema.md §4).
 from sqlalchemy import Column, BigInteger, Text, Boolean, TIMESTAMP, ForeignKey, Index, func, text
 from sqlalchemy.dialects.postgresql import JSONB
@@ -9,9 +8,7 @@ from app.Models.base import Base
 
 
 class SavedSearch(Base):
-    """A buyer's saved filter set with new-stock alerting. `filters` is JSONB mirroring
-    StockSearchParams as-is — a new filter field never needs a migration here.
-    """
+    """A buyer's saved filter set with new-stock alerting."""
 
     __tablename__ = "saved_searches"
 

@@ -6,7 +6,7 @@ import { getQuoteRequests, submitQuoteRequest } from '@/services/quote-requests'
 export const quoteRequestsOptions = (userId: string) =>
   queryOptions({
     queryKey: queryKeys.quoteRequests.list(userId),
-    queryFn: () => getQuoteRequests(userId),
+    queryFn: () => getQuoteRequests(),
     enabled: !!userId,
     staleTime: STALE_TIMES.DYNAMIC,
     gcTime: GC_TIMES.MEDIUM,

@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 style="margin-top:0;">Thanks, {{ contact_name }} — we've received your quote request</h2>
+<p>We received your request for <strong>{{ unit_make }} {{ unit_model }} ({{ unit_year }})</strong>, shipping to <strong>{{ destination_country }}</strong> on {{ incoterm }} terms.</p>
+<p>Our team is preparing your delivered price and will follow up at this address shortly.</p>
+<p style="color:#888888;">Reference: #{{ quote_request_id }}</p>
+{% endblock %}

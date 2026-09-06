@@ -1,10 +1,5 @@
 # routes/api/health.py
-
-# Public health endpoints, mounted at the app root (no /api/v0 prefix) so infrastructure
-# probes and uptime monitors reach them at stable URLs.
-#
-#   /health       - liveness: process is up and serving requests (fast, no dependencies)
-#   /health/ready - readiness: process can serve real traffic (checks the database)
+# Public health endpoints, mounted at the app root (no /api/v0 prefix) so infrastructure probes and uptime monitors reach them at stable URLs.
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends

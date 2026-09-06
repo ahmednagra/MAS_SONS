@@ -1,0 +1,9 @@
+<!-- Japanese seller-facing — machine-drafted; needs a native speaker's review before
+     production use (emailsubsystem.md §4). -->
+{% extends "base.html" %}
+{% block content %}
+<h2 style="margin-top:0;">{{ name }}様、お問い合わせありがとうございます</h2>
+<p>お車・重機の買取お問い合わせを受け付けました：<strong>{{ description }}</strong></p>
+<p>担当者より折り返しご連絡いたします。</p>
+<p style="color:#888888;">受付番号: #{{ buyback_lead_id }}</p>
+{% endblock %}

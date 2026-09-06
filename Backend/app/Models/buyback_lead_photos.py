@@ -1,5 +1,4 @@
 # app/Models/buyback_lead_photos.py
-
 # buyback_lead_photos (databaseschema.md §3).
 from sqlalchemy import Column, BigInteger, SmallInteger, Text, TIMESTAMP, ForeignKey, Index, func, text
 from sqlalchemy.orm import relationship

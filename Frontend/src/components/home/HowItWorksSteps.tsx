@@ -9,14 +9,14 @@ const STEPS = [
 
 export function HowItWorksSteps() {
   return (
-    <div className="grid grid-cols-2 gap-x-5 gap-y-6 sm:grid-cols-3 lg:grid-cols-6">
+    <ol className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:grid-cols-6">
       {STEPS.map((step) => (
-        <div key={step.n} className="border-t-2 border-accent pt-3">
-          <span className="block text-xs font-semibold tabular-nums text-accent">{step.n}</span>
-          <h3 className="mt-1.5 text-sm font-semibold text-ink">{step.t}</h3>
-          <p className="mt-1 text-[13px] leading-snug text-sub">{step.d}</p>
-        </div>
+        <li key={step.n} className="border-t border-ink pt-4">
+          <span className="block font-mono text-xs tabular-nums text-sub">{step.n}</span>
+          <h3 className="mt-2 text-sm font-semibold text-ink">{step.t}</h3>
+          <p className="mt-1.5 text-[13px] leading-snug text-sub">{step.d}</p>
+        </li>
       ))}
-    </div>
+    </ol>
   );
 }

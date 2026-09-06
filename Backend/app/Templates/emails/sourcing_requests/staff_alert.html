@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 style="margin-top:0;">New sourcing request #{{ sourcing_request_id }}</h2>
+<p><strong>{{ contact_name }}</strong> ({{ contact_email }}) is looking for <strong>{{ model_description }}</strong>{% if make %} ({{ make }}){% endif %}.</p>
+{% if budget_max_usd %}<p>Budget: up to ${{ "%.2f"|format(budget_max_usd) }} USD</p>{% endif %}
+{% endblock %}

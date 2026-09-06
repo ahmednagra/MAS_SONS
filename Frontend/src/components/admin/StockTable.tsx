@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useStockList } from '@/hooks/queries';
-import { Table, TableHead, TableHeaderCell, TableRow, TableCell } from '@/components/ui';
+import { Button, Table, TableHead, TableHeaderCell, TableRow, TableCell } from '@/components/ui';
 
 const PAGE_SIZE = 20;
 
@@ -27,7 +27,7 @@ export function StockTable() {
           {data.items.map((unit) => (
             <TableRow key={unit.id}>
               <TableCell>
-                <Link href={`/admin/stock/${unit.id}`} className="font-medium text-ink hover:text-accent">
+                <Link href={`/admin/stock/${unit.slug}`} className="font-medium text-ink hover:text-accent">
                   {unit.year} {unit.make} {unit.model}
                 </Link>
               </TableCell>
@@ -39,12 +39,9 @@ export function StockTable() {
       </Table>
       {data.next_cursor != null && (
         <nav className="flex justify-center">
-          <button
-            className="rounded-sm border border-line px-4 py-2 text-sm font-medium text-ink hover:bg-paper"
-            onClick={() => router.push(`/admin/stock?cursor=${data.next_cursor}`)}
-          >
+          <Button variant="secondary" onClick={() => router.push(`/admin/stock?cursor=${data.next_cursor}`)}>
             Next →
-          </button>
+          </Button>
         </nav>
       )}
     </div>

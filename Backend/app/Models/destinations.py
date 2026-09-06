@@ -1,14 +1,11 @@
 # app/Models/destinations.py
-
 # destinations — shipping/port/Incoterm reference data (databaseschema.md §9).
 from sqlalchemy import Column, BigInteger, SmallInteger, Text, TIMESTAMP, ForeignKey, CheckConstraint, func
 from app.Models.base import Base
 
 
 class Destination(Base):
-    """Per-destination shipping/port/Incoterm reference data backing every destination
-    landing page and every request/order's destination FK.
-    """
+    """Per-destination shipping/port/Incoterm reference data backing every destination landing page and every request/order's destination FK."""
 
     __tablename__ = "destinations"
 

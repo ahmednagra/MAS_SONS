@@ -1,0 +1,10 @@
+Thanks, {{ contact_name }} — we've received your quote request.
+
+Unit: {{ unit_make }} {{ unit_model }} ({{ unit_year }})
+Destination: {{ destination_country }}
+Incoterm: {{ incoterm }}
+Reference: #{{ quote_request_id }}
+
+Our team is preparing your delivered price and will follow up shortly.
+
+M.A.S & SONS

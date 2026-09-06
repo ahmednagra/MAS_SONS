@@ -1,9 +1,5 @@
 # app/Controllers/AuthController.py
-
-# Multi-provider auth + refresh rotation endpoints (databaseschema.md §1). Thin
-# delegation to AuthService; catches unexpected exceptions, logs, and re-raises
-# (codingconventions.md §3) — AuthService itself raises the actual HTTPException
-# for every real auth failure (bad password, expired token, etc.).
+# Multi-provider auth + refresh rotation endpoints (databaseschema.md §1).
 from fastapi import HTTPException, Request
 from sqlalchemy.orm import Session
 
@@ -73,11 +69,8 @@ class AuthController:
     @staticmethod
     def request_magic_link(data: MagicLinkRequest, db: Session) -> dict:
         try:
-            raw_token = AuthService.request_magic_link(data.email, db)
-            # TODO(emailsubsystem.md): send `raw_token` via EmailService's
-            # notifications/saved_search_digest-style template once implemented.
-            # Never returned to the client — a generic response either way avoids
-            # leaking whether an email address has an account.
+            AuthService.request_magic_link(data.email, db)  # raw token is returned for the email step
+            # TODO(emailsubsystem.md): send `raw_token` via EmailService's notifications/saved_search_digest-style template once implemented.
             logger.info(f"Magic link requested for {data.email} (email dispatch not yet wired)")
             return {"message": "If that email has an account, a sign-in link has been sent."}
         except HTTPException:

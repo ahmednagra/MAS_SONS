@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 style="margin-top:0;">Thanks, {{ contact_name }} — we're sourcing your request</h2>
+<p>We received your request for <strong>{{ model_description }}</strong>{% if make %} ({{ make }}){% endif %}.</p>
+<p>Our team will search the next matching auctions and follow up at this address.</p>
+<p style="color:#888888;">Reference: #{{ sourcing_request_id }}</p>
+{% endblock %}

@@ -1,7 +1,7 @@
 # app/Schemas/sourcing_request.py
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 
 class SourcingRequestCreate(BaseModel):
@@ -15,6 +15,11 @@ class SourcingRequestCreate(BaseModel):
     destination_country: Optional[str] = None
     quote_type: Optional[str] = None
     buying_timeframe: Optional[str] = None
+
+    @field_validator("destination_country")
+    @classmethod
+    def _normalize_country_code(cls, v: Optional[str]) -> Optional[str]:
+        return v.upper() if v else v
 
 
 class SourcingRequestResponse(BaseModel):

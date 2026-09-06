@@ -1,13 +1,28 @@
 # app/Services/QuoteRequestService.py
+# Quote requests: guest/buyer create, owner or staff read, staff quoting.
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.Models import QuoteRequest, User
 from app.Schemas.quote_request import QuoteRequestCreate, QuoteRequestQuote, QuoteRequestResponse
-from datetime import datetime, timezone
+from app.Utils.Query import first_live, keyset_page
+
+
+def _to_response(row: QuoteRequest) -> QuoteRequestResponse:
+    response = QuoteRequestResponse.model_validate(row)
+    if row.unit is not None:
+        response.unit_make = row.unit.make
+        response.unit_model = row.unit.model
+        response.unit_year = row.unit.year
+    return response
+
+
+def _with_unit():
+    return select(QuoteRequest).options(selectinload(QuoteRequest.unit))
 
 
 class QuoteRequestService:
@@ -17,49 +32,39 @@ class QuoteRequestService:
         db.add(row)
         db.commit()
         db.refresh(row)
-        return QuoteRequestResponse.model_validate(row)
+        return _to_response(row)
 
     @staticmethod
     def _get_owned_or_staff(id: int, current_user: User, db: Session) -> QuoteRequest:
-        row = db.get(QuoteRequest, id)
-        if row is None or row.deleted_at is not None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quote request not found")
+        row = first_live(db, _with_unit().where(QuoteRequest.id == id), "Quote request not found")
         if current_user.user_type != "staff" and row.user_id != current_user.id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your quote request")
         return row
 
     @staticmethod
     def get_by_id(id: int, current_user: User, db: Session) -> QuoteRequestResponse:
-        return QuoteRequestResponse.model_validate(QuoteRequestService._get_owned_or_staff(id, current_user, db))
+        return _to_response(QuoteRequestService._get_owned_or_staff(id, current_user, db))
 
     @staticmethod
     def list_mine(user: User, cursor: Optional[int], limit: int, db: Session) -> list[QuoteRequestResponse]:
-        stmt = select(QuoteRequest).where(QuoteRequest.user_id == user.id, QuoteRequest.deleted_at.is_(None))
-        if cursor is not None:
-            stmt = stmt.where(QuoteRequest.id < cursor)
-        stmt = stmt.order_by(QuoteRequest.id.desc()).limit(limit)
-        rows = db.execute(stmt).scalars().all()
-        return [QuoteRequestResponse.model_validate(r) for r in rows]
+        stmt = _with_unit().where(QuoteRequest.user_id == user.id, QuoteRequest.deleted_at.is_(None))
+        rows = db.execute(keyset_page(stmt, QuoteRequest.id, cursor, limit)).scalars().all()
+        return [_to_response(r) for r in rows]
 
     @staticmethod
     def list_all(cursor: Optional[int], limit: int, status_filter: Optional[str], db: Session) -> list[QuoteRequestResponse]:
-        stmt = select(QuoteRequest).where(QuoteRequest.deleted_at.is_(None))
+        stmt = _with_unit().where(QuoteRequest.deleted_at.is_(None))
         if status_filter:
             stmt = stmt.where(QuoteRequest.status == status_filter)
-        if cursor is not None:
-            stmt = stmt.where(QuoteRequest.id < cursor)
-        stmt = stmt.order_by(QuoteRequest.id.desc()).limit(limit)
-        rows = db.execute(stmt).scalars().all()
-        return [QuoteRequestResponse.model_validate(r) for r in rows]
+        rows = db.execute(keyset_page(stmt, QuoteRequest.id, cursor, limit)).scalars().all()
+        return [_to_response(r) for r in rows]
 
     @staticmethod
     def quote(id: int, data: QuoteRequestQuote, db: Session) -> QuoteRequestResponse:
-        row = db.get(QuoteRequest, id)
-        if row is None or row.deleted_at is not None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quote request not found")
+        row = first_live(db, _with_unit().where(QuoteRequest.id == id), "Quote request not found")
         row.quoted_price_usd = data.quoted_price_usd
         row.status = "quoted"
         row.quoted_at = datetime.now(timezone.utc)
         db.commit()
         db.refresh(row)
-        return QuoteRequestResponse.model_validate(row)
+        return _to_response(row)

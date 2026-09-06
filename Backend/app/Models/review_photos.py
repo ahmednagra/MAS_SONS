@@ -1,5 +1,4 @@
 # app/Models/review_photos.py
-
 # review_photos (databaseschema.md §5).
 from sqlalchemy import Column, BigInteger, SmallInteger, Text, TIMESTAMP, ForeignKey, Index, func, text
 from sqlalchemy.orm import relationship

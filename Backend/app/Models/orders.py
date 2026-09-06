@@ -1,5 +1,4 @@
 # app/Models/orders.py
-
 # orders — converted quote/sourcing request (databaseschema.md §3).
 from sqlalchemy import (
     Column, BigInteger, Text, Numeric, TIMESTAMP, ForeignKey, CheckConstraint, Index, func,
@@ -11,10 +10,7 @@ from app.Models.base import Base
 
 
 class Order(Base):
-    """A quote or sourcing request that converted into a real transaction — commercial
-    terms, invoice, and shipment-milestone tracking. Always traces back to exactly one
-    originating request (chk_orders_exactly_one_source).
-    """
+    """A quote or sourcing request that converted into a real transaction — commercial terms, invoice, and shipment-milestone tracking."""
 
     __tablename__ = "orders"
 

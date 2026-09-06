@@ -1,5 +1,4 @@
 # app/Models/unit_images.py
-
 # unit_images — photo_type-categorized gallery (databaseschema.md §2).
 from sqlalchemy import (
     Column, BigInteger, SmallInteger, Text, TIMESTAMP, ForeignKey, CheckConstraint, Index, func, text,

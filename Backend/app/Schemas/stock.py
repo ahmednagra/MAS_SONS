@@ -1,12 +1,11 @@
 # app/Schemas/stock.py
-
-# Unit request/response schemas (databaseschema.md §2). Filter fields match the
-# Search & Filters module reconciled against databaseschema.md earlier in this
-# project's design pass — every filter here maps to an indexed units column.
+# Unit request/response schemas (databaseschema.md §2).
 from datetime import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
+
+from app.Schemas.destination import DestinationResponse
 
 
 class UnitImageResponse(BaseModel):
@@ -28,9 +27,7 @@ class FeatureResponse(BaseModel):
 
 
 class UnitSummaryResponse(BaseModel):
-    """List/search row — the columns a stock grid actually renders. Deliberately
-    narrower than UnitResponse (codingconventions.md §6 — don't load full rows when
-    a query only needs a few columns)."""
+    """List/search row — the columns a stock grid actually renders."""
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -55,8 +52,7 @@ class UnitSummaryResponse(BaseModel):
 
 
 class UnitResponse(UnitSummaryResponse):
-    """Full detail view — everything UnitSummaryResponse has, plus the rest of the
-    row and its two eager-loaded collections."""
+    """Full detail view — everything UnitSummaryResponse has, plus the rest of the row and its two eager-loaded collections."""
     repair_history: bool
     one_owner: Optional[bool] = None
     auction_sheet_url: Optional[str] = None
@@ -73,9 +69,7 @@ class UnitResponse(UnitSummaryResponse):
 
 
 class StockSearchParams(BaseModel):
-    """Query params for GET /stock — every field is optional; an unset field applies
-    no filter. Pagination is keyset-style on `id` (codingconventions.md §6 — never
-    OFFSET on a table that can grow past a few thousand rows)."""
+    """Query params for GET /stock — every field is optional; an unset field applies no filter."""
 
     category: Optional[str] = None
     body_type: Optional[str] = None
@@ -107,17 +101,66 @@ class FacetCount(BaseModel):
 
 
 class StockFacetsResponse(BaseModel):
-    """Aggregate counts over in-stock, non-deleted units — what the storefront's
-    browse-by-make / body-type tiles and the hero's "N units in stock" line render.
-    Every figure comes from a GROUP BY on an indexed units column; nothing here is
-    derived from a page of rows."""
+    """Aggregate counts over in-stock, non-deleted units — what the storefront's browse-by-make / body-type tiles, the hero finder, and the category landing…"""
 
     total: int
     vehicles: int
     equipment: int
     makes: List[FacetCount]
     body_types: List[FacetCount]
+    steering_positions: List[FacetCount] = []
+    fuel_types: List[FacetCount] = []
+    grades: List[FacetCount] = []
+    year_min: Optional[int] = None
+    year_max: Optional[int] = None
+    price_min: Optional[float] = None
+    price_max: Optional[float] = None
 
 
 class StockCountResponse(BaseModel):
     count: int
+
+
+class UnitPriceUpdate(BaseModel):
+    price_usd: float
+
+
+# ---- Detail-page insights (GET /stock/{slug}/insights) ------------------------- Everything the storefront's "market position" / shipping / equipment…
+
+class GradeCount(BaseModel):
+    grade: str
+    count: int
+
+
+class PricePoint(BaseModel):
+    """One dot on the price-vs-usage scatter."""
+    id: int
+    slug: str
+    year: int
+    price_usd: float
+    usage: Optional[int] = None
+    auction_grade: str
+    is_current: bool = False
+
+
+class MarketPosition(BaseModel):
+    scope: str = Field(description="'model' (same make+model), 'body_type', or 'category' — widest scope that had enough peers")
+    label: str
+    peer_count: int
+    price_min: Optional[float] = None
+    price_median: Optional[float] = None
+    price_max: Optional[float] = None
+    price_avg: Optional[float] = None
+    usage_avg: Optional[int] = None
+    usage_unit: str = "km"
+    price_percentile: Optional[int] = Field(default=None, description="% of peers priced at or below this unit (0-100)")
+    usage_percentile: Optional[int] = Field(default=None, description="% of peers with usage at or below this unit (0-100)")
+    grade_distribution: List[GradeCount] = []
+
+
+class UnitInsightsResponse(BaseModel):
+    market: MarketPosition
+    comparables: List[UnitSummaryResponse] = []
+    price_points: List[PricePoint] = []
+    destinations: List[DestinationResponse] = []
+    feature_catalog: List[FeatureResponse] = []

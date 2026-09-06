@@ -1,0 +1,4 @@
+New sourcing request #{{ sourcing_request_id }}
+
+{{ contact_name }} ({{ contact_email }}) is looking for {{ model_description }}{% if make %} ({{ make }}){% endif %}.
+{% if budget_max_usd %}Budget: up to ${{ "%.2f"|format(budget_max_usd) }} USD{% endif %}

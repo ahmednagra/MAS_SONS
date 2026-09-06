@@ -1,46 +1,23 @@
-'use client';
-import { useEffect, useRef, useState } from 'react';
-
+/**
+ * Static figures — no count-up animation. Callers pass only stats worth stating;
+ * a zero is dropped here so the band never advertises an empty catalog.
+ */
 export function StatsBand({ stats }: { stats: Array<{ target: number; suffix?: string; label: string }> }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setProgress(1);
-      return;
-    }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (!entries.some((e) => e.isIntersecting)) return;
-        observer.disconnect();
-        const start = Date.now();
-        const duration = 1100;
-        const tick = () => {
-          const p = Math.min((Date.now() - start) / duration, 1);
-          setProgress(1 - (1 - p) ** 3);
-          if (p < 1) requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick);
-      },
-      { threshold: 0.2 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
+  const shown = stats.filter((s) => s.target > 0).slice(0, 4);
+  if (!shown.length) return null;
+  // Static class names so Tailwind can see them.
+  const cols = ['sm:grid-cols-1', 'sm:grid-cols-2', 'sm:grid-cols-3', 'sm:grid-cols-4'][shown.length - 1];
   return (
-    <div ref={ref} className="grid grid-cols-2 border-y border-line sm:grid-cols-4">
-      {stats.map((stat, i) => (
-        <div key={stat.label} className={`px-4 py-6 text-center ${i > 0 ? 'border-l border-line' : ''}`}>
-          <p className="text-3xl font-semibold tabular-nums tracking-tight text-ink">
-            {Math.round(progress * stat.target).toLocaleString('en-US')}
+    <dl className={`grid grid-cols-2 border-y border-line ${cols}`}>
+      {shown.map((stat, i) => (
+        <div key={stat.label} className={`px-4 py-7 text-center ${i > 0 ? 'sm:border-l sm:border-line' : ''}`}>
+          <dd className="font-mono text-[2.25rem] font-medium tabular-nums tracking-tight text-ink">
+            {stat.target.toLocaleString('en-US')}
             {stat.suffix}
-          </p>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-sub">{stat.label}</p>
+          </dd>
+          <dt className="mt-1 font-mono text-[11px] uppercase tracking-[0.16em] text-sub">{stat.label}</dt>
         </div>
       ))}
-    </div>
+    </dl>
   );
 }

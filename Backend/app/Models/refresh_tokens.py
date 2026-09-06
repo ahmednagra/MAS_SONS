@@ -1,5 +1,4 @@
 # app/Models/refresh_tokens.py
-
 # refresh_tokens (databaseschema.md §1).
 from sqlalchemy import Column, BigInteger, Text, TIMESTAMP, ForeignKey, Index, func
 from sqlalchemy.dialects.postgresql import INET, UUID
@@ -9,10 +8,7 @@ from app.Models.base import Base
 
 
 class RefreshToken(Base):
-    """Rotating refresh tokens with reuse detection (token-family revocation).
-
-    No soft delete — lifecycle is expires_at / revoked_at / replaced_by_id.
-    """
+    """Rotating refresh tokens with reuse detection (token-family revocation)."""
 
     __tablename__ = "refresh_tokens"
 

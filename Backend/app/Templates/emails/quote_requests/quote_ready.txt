@@ -1,0 +1,8 @@
+Your quote is ready
+
+Hi {{ contact_name }}, here is your delivered price for {{ unit_make }} {{ unit_model }} ({{ unit_year }}):
+
+${{ "%.2f"|format(quoted_price_usd) }} USD ({{ incoterm }})
+
+Reply to this email or contact us to proceed with your order.
+Reference: #{{ quote_request_id }}

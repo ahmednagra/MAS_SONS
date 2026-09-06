@@ -8,7 +8,15 @@
   --color-accent: #b8431f;
   --color-accent-ink: #ffffff;
   --color-sub: #5b6472;
-  --font-sans: "IBM Plex Sans", -apple-system, sans-serif;
+  --font-sans: var(--font-plex-sans), "IBM Plex Sans", -apple-system, sans-serif;
+  --font-display: var(--font-plex-condensed), "IBM Plex Sans Condensed", var(--font-plex-sans), sans-serif;
+  --font-mono: var(--font-plex-mono), "IBM Plex Mono", ui-monospace, monospace;
+}
+
+/* Display headlines: condensed width, tight tracking, one weight. */
+.font-display {
+  letter-spacing: -0.015em;
+  font-weight: 600;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -38,15 +46,27 @@ body {
   color: var(--color-ink);
 }
 
+/* Horizontal rails scroll without a visible bar; keyboard and touch still work. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 @keyframes dash {
   to {
     stroke-dashoffset: -20;
   }
 }
 
-@keyframes gradepulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgb(184 67 31 / 0); }
-  50% { box-shadow: 0 0 0 4px rgb(184 67 31 / 0.22); }
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.marquee {
+  animation: marquee 45s linear infinite;
 }
 
 @keyframes grow {
@@ -74,4 +94,31 @@ body {
       animation-range: entry 0% cover 22%;
     }
   }
+}
+
+/* Detail-page motion — every one of these is disabled by the reduced-motion rule above. */
+@keyframes pop {
+  from { opacity: 0; transform: scale(0.3); }
+  60% { transform: scale(1.15); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slidemark {
+  from { opacity: 0; transform: translateX(-24px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes drawarc {
+  from { stroke-dashoffset: var(--arc-len, 300); }
+  to { stroke-dashoffset: var(--arc-target, 0); }
+}
+
+@keyframes ringpulse {
+  0% { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+@keyframes fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

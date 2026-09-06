@@ -1,7 +1,6 @@
 # app/Schemas/destination.py
-from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class DestinationResponse(BaseModel):
@@ -24,3 +23,8 @@ class DestinationUpsert(BaseModel):
     estimated_transit_days: Optional[int] = None
     shipping_mode: Optional[str] = None
     import_regulations_summary: Optional[str] = None
+
+    @field_validator("country_code")
+    @classmethod
+    def _normalize_country_code(cls, v: str) -> str:
+        return v.upper()

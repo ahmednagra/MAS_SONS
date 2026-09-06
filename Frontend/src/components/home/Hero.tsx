@@ -1,68 +1,82 @@
-import Image from 'next/image';
+import type { StockFacets } from '@/types/stock';
 
-const STRIP = [
-  { src: '/mock/prado.jpg', alt: 'Toyota Land Cruiser Prado-class SUV' },
-  { src: '/mock/hiace.jpg', alt: 'Toyota HiAce van' },
-  { src: '/mock/prius.jpg', alt: 'Toyota Prius sedan' },
-  { src: '/mock/excavator.jpg', alt: 'Hydraulic excavator' },
+const FACTS = [
+  'Real auction sheet on every unit',
+  'FOB, C&F or CIF to your port',
+  'No account needed for a quote',
 ];
 
-export function Hero() {
+const seg = 'flex min-w-0 flex-1 flex-col px-5 py-3 sm:py-2.5';
+const segLabel = 'font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-sub';
+const segField = 'mt-1 w-full truncate bg-transparent text-[15px] font-medium text-ink placeholder:font-normal placeholder:text-sub focus-visible:outline-none';
+
+/**
+ * Light, centred hero: one promise, three facts, one search bar. A plain GET form so it
+ * works before hydration and every search is a shareable /stock URL. The full filter
+ * panel lives on the stock page.
+ */
+export function Hero({ facets }: { facets: StockFacets }) {
   return (
-    <section className="mx-auto max-w-[1200px] px-4 py-16 text-center sm:py-20">
-      <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-sub">
-        Used vehicles &amp; heavy equipment · exported from Japan
-      </p>
-      <h1 className="mx-auto max-w-3xl text-4xl font-semibold leading-[1.05] tracking-tight text-ink sm:text-5xl">
-        Find it in Japan. Ship it anywhere.
-      </h1>
-      <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-sub sm:text-lg">
-        Auction-graded vehicles and machinery, exported directly from Yokohama and Nagoya with the
-        inspector&rsquo;s own sheet, full documentation and an FOB, C&amp;F or CIF quote to your port.
-      </p>
+    <section className="bg-surface">
+      <div className="mx-auto max-w-[1200px] px-4 pb-12 pt-16 text-center sm:pb-14 sm:pt-24">
+        <p className="mb-4 font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-sub">
+          Used vehicles &amp; heavy equipment · exported from Japan
+        </p>
+        <h1 className="font-display mx-auto max-w-3xl text-[2.6rem] leading-[1.02] text-ink sm:text-[3.6rem]">Find your next vehicle in Japan</h1>
 
-      <form
-        action="/stock"
-        method="get"
-        className="mx-auto mt-8 grid max-w-3xl grid-cols-1 overflow-hidden rounded-sm border border-line bg-surface text-left sm:grid-cols-[1fr_1fr_1fr_auto]"
-      >
-        <label className="border-b border-line p-3 sm:border-b-0 sm:border-r">
-          <span className="block text-[10px] font-semibold uppercase tracking-wider text-sub">Category</span>
-          <select name="category" className="mt-1 w-full bg-transparent text-sm font-medium text-ink focus-visible:outline-none">
-            <option value="">All categories</option>
-            <option value="vehicle">Vehicles</option>
-            <option value="equipment">Heavy Equipment</option>
-          </select>
-        </label>
-        <label className="border-b border-line p-3 sm:border-b-0 sm:border-r">
-          <span className="block text-[10px] font-semibold uppercase tracking-wider text-sub">Make</span>
-          <input
-            name="make"
-            type="text"
-            placeholder="e.g. Toyota"
-            className="mt-1 w-full bg-transparent text-sm font-medium text-ink placeholder:text-sub focus-visible:outline-none"
-          />
-        </label>
-        <label className="p-3">
-          <span className="block text-[10px] font-semibold uppercase tracking-wider text-sub">Budget (USD)</span>
-          <input
-            name="price_max"
-            type="number"
-            placeholder="Up to $30,000"
-            className="mt-1 w-full bg-transparent text-sm font-medium text-ink placeholder:text-sub focus-visible:outline-none"
-          />
-        </label>
-        <button type="submit" className="bg-accent px-6 py-4 text-sm font-semibold text-accent-ink hover:opacity-90">
-          Search stock
-        </button>
-      </form>
+        <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-7 gap-y-2 text-sm text-sub">
+          {FACTS.map((fact) => (
+            <li key={fact} className="flex items-center gap-2">
+              <svg aria-hidden viewBox="0 0 20 20" className="h-4 w-4 shrink-0 fill-none stroke-[#2f9e5b]" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="10" cy="10" r="8" />
+                <path d="m6.5 10 2.3 2.3L13.5 7.6" />
+              </svg>
+              {fact}
+            </li>
+          ))}
+        </ul>
 
-      <div className="mx-auto mt-6 grid max-w-2xl grid-cols-2 gap-2.5 sm:grid-cols-4">
-        {STRIP.map((photo) => (
-          <div key={photo.src} className="relative aspect-[4/3] overflow-hidden rounded-sm">
-            <Image src={photo.src} alt={photo.alt} fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover" />
+        <form
+          action="/stock"
+          method="get"
+          role="search"
+          className="mx-auto mt-9 flex max-w-[940px] flex-col overflow-hidden rounded-2xl border border-line bg-surface text-left shadow-[0_10px_40px_-18px_rgba(0,0,0,0.35)] sm:flex-row sm:items-center sm:rounded-full sm:pr-2"
+        >
+          <label className={`${seg} border-b border-line sm:border-b-0 sm:border-r`}>
+            <span className={segLabel}>Category</span>
+            <select suppressHydrationWarning name="category" className={segField} defaultValue="">
+              <option value="">All ({facets.total.toLocaleString('en-US')})</option>
+              <option value="vehicle">Vehicles ({facets.vehicles.toLocaleString('en-US')})</option>
+              <option value="equipment">Heavy equipment ({facets.equipment.toLocaleString('en-US')})</option>
+            </select>
+          </label>
+          <label className={`${seg} border-b border-line sm:border-b-0 sm:border-r`}>
+            <span className={segLabel}>Make</span>
+            <select suppressHydrationWarning name="make" className={segField} defaultValue="">
+              <option value="">Any make</option>
+              {facets.makes.map((m) => (
+                <option key={m.value} value={m.value}>{m.value} ({m.count})</option>
+              ))}
+            </select>
+          </label>
+          <label className={`${seg} border-b border-line sm:border-b-0`}>
+            <span className={segLabel}>Max budget (USD)</span>
+            <input suppressHydrationWarning name="price_max" type="number" min={0} step={500} placeholder="Any budget" className={segField} />
+          </label>
+          <div className="p-2 sm:p-0">
+            <button
+              type="submit"
+              aria-label="Search stock"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-ink text-sm font-semibold text-paper hover:opacity-90 sm:h-12 sm:w-12 sm:rounded-full"
+            >
+              <svg aria-hidden viewBox="0 0 24 24" className="h-4.5 w-4.5 h-[18px] w-[18px] fill-none stroke-current" strokeWidth="2.2" strokeLinecap="round">
+                <circle cx="11" cy="11" r="6.5" />
+                <path d="m20 20-4.2-4.2" />
+              </svg>
+              <span className="sm:hidden">Search stock</span>
+            </button>
           </div>
-        ))}
+        </form>
       </div>
     </section>
   );

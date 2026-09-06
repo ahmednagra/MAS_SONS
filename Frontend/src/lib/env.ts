@@ -7,4 +7,6 @@ export const env = {
   NODE_ENV: process.env.NODE_ENV ?? 'development',
   API_BASE_URL: required(process.env.API_BASE_URL, 'API_BASE_URL'),
   NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
+  // E.164 digits only (e.g. 8190xxxxxxxx). Empty disables the WhatsApp CTA.
+  NEXT_PUBLIC_WHATSAPP_NUMBER: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '',
 };

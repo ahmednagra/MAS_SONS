@@ -1,27 +1,20 @@
 # app/Utils/Helpers.py
-
-# Misc shared helpers — currently just the auth dependency chain every protected
-# route uses. Mirrors echooo-backend's own cookie-aware bearer scheme (its
-# app/Utils/Helpers.py), stripped of its RBAC/role-hierarchy specifics, which
-# don't apply to this project's simple user_type/staff_role model
-# (databaseschema.md §1).
+# Misc shared helpers — currently just the auth dependency chain every protected route uses.
 from typing import Optional
 
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, WebSocket, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
 from app.Models import User
 from app.Services.AuthService import AuthService
+from app.Utils.Net import safe_ip
 from config.database import get_db
 from config.settings import settings
 
 
 class OAuth2PasswordBearerWithCookie(OAuth2PasswordBearer):
-    """Accepts the token from an `Authorization: Bearer` header (API clients, the
-    Swagger "Authorize" button) OR the httpOnly access-token cookie set by
-    login/refresh (settings.COOKIE_AUTH_ENABLED) — header takes precedence.
-    """
+    """Accepts the token from an `Authorization: Bearer` header (API clients, the Swagger "Authorize" button) OR the httpOnly access-token cookie set by…"""
 
     _PLACEHOLDER_BEARERS = {"", "null", "undefined", "none"}
 
@@ -41,6 +34,9 @@ class OAuth2PasswordBearerWithCookie(OAuth2PasswordBearer):
 
 
 oauth2_scheme = OAuth2PasswordBearerWithCookie(tokenUrl=f"{settings.API_V0_STR}/auth/login")
+oauth2_scheme_optional = OAuth2PasswordBearerWithCookie(
+    tokenUrl=f"{settings.API_V0_STR}/auth/login", auto_error=False
+)
 
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
@@ -48,23 +44,28 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     return AuthService.get_current_user(token, db)
 
 
+def get_optional_user(
+    token: Optional[str] = Depends(oauth2_scheme_optional), db: Session = Depends(get_db),
+) -> Optional[User]:
+    """For guest-allowed endpoints (QuoteRequest/SourcingRequest/Review create) — an absent or invalid token means a guest, never a 401."""
+    if not token:
+        return None
+    try:
+        return AuthService.get_current_user(token, db)
+    except HTTPException:
+        return None
+
+
 def require_staff(current_user: User = Depends(get_current_user)) -> User:
-    """For staff-only endpoints (admin controllers). userType/staff_role are UI
-    context elsewhere in this stack's conventions, but server-side authorization
-    is exactly what this dependency enforces — never trust a client-side check
-    alone (directorystructure.md, security invariant carried over from the
-    dashboard's own CLAUDE.md).
-    """
+    """For staff-only endpoints (admin controllers)."""
     if current_user.user_type != "staff":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Staff access required")
     return current_user
 
 
-def client_ip(request: Request) -> Optional[str]:
-    """Read from the trusted end of the proxy chain — the first entry of
-    X-Forwarded-For is whatever the caller decided to write there, not evidence.
-    """
+def client_ip(request: Request | WebSocket) -> Optional[str]:
+    """Read from the trusted end of the proxy chain — the first entry of X-Forwarded-For is whatever the caller decided to write there, not evidence."""
     forwarded = request.headers.get("X-Forwarded-For")
     if forwarded:
         return forwarded.split(",")[-1].strip()
-    return request.client.host if request.client else None
+    return safe_ip(request.client.host if request.client else None)

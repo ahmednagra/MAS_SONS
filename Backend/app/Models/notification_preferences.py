@@ -1,5 +1,4 @@
 # app/Models/notification_preferences.py
-
 # notification_preferences (databaseschema.md §6, notificationssubsystem.md §6).
 from sqlalchemy import Column, BigInteger, Text, Boolean, Time, TIMESTAMP, ForeignKey, CheckConstraint, func, text
 from sqlalchemy.dialects.postgresql import JSONB
@@ -9,9 +8,7 @@ from app.Models.base import Base
 
 
 class NotificationPreference(Base):
-    """Per-user channel/quiet-hours/digest preferences. Guest buyers never get a
-    row — they receive only the transactional messages their own action triggered.
-    """
+    """Per-user channel/quiet-hours/digest preferences."""
 
     __tablename__ = "notification_preferences"
 

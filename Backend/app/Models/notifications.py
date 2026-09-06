@@ -1,22 +1,20 @@
 # app/Models/notifications.py
-
 # notifications (databaseschema.md §6, notificationssubsystem.md §6).
-from sqlalchemy import Column, BigInteger, Text, TIMESTAMP, ForeignKey, CheckConstraint, Index, func
+from sqlalchemy import (
+    Column, BigInteger, Text, TIMESTAMP, ForeignKey, CheckConstraint, Identity, Index,
+    PrimaryKeyConstraint, func,
+)
 from sqlalchemy.orm import relationship
 
 from app.Models.base import Base
 
 
 class Notification(Base):
-    """Fan-out-on-write in-app/email dispatch record, one row per recipient per
-    notification event. No soft delete — an event projection, hard-deleted by
-    retention. PARTITION BY RANGE (created_at) at the DB level — a migration/DDL
-    concern, not something the ORM model itself needs to express.
-    """
+    """Fan-out-on-write in-app/email dispatch record, one row per recipient per notification event."""
 
     __tablename__ = "notifications"
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, Identity(), nullable=False)
     recipient_type = Column(Text, nullable=False)
     recipient_id = Column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     notification_type = Column(Text, nullable=False)
@@ -35,9 +33,11 @@ class Notification(Base):
     recipient = relationship("User", foreign_keys=[recipient_id])
 
     __table_args__ = (
+        PrimaryKeyConstraint("id", "created_at"),
         CheckConstraint("recipient_type IN ('user','staff')", name="ck_notifications_recipient_type"),
         CheckConstraint("priority IN ('low','normal','high','critical')", name="ck_notifications_priority"),
         CheckConstraint("status IN ('unread','read','archived')", name="ck_notifications_status"),
         Index("idx_notifications_recipient_status", "recipient_id", "status", "created_at"),
         Index("idx_notifications_expires", "expires_at", postgresql_where=expires_at.isnot(None)),
+        {"postgresql_partition_by": "RANGE (created_at)"},
     )

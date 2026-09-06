@@ -1,28 +1,54 @@
 'use client';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys, STALE_TIMES, GC_TIMES } from '@/lib/react-query';
-import { getFavoriteListings, addFavorite, removeFavorite } from '@/services/favorites';
-import type { FavoriteToggleInput } from '@/types/favorites';
+import { useSessionKey } from './useSessionKey';
+import { getFavorites, addFavorite, removeFavorite } from '@/services/favorites';
+import type { Favorite } from '@/types/favorites';
 
-export const useFavoriteListings = (userId: string) =>
-  useQuery({
-    queryKey: queryKeys.favorites.list(userId),
-    queryFn: () => getFavoriteListings(userId),
-    enabled: !!userId,
+const favoritesOptions = (sessionKey: string) =>
+  queryOptions({
+    queryKey: queryKeys.favorites.list(sessionKey),
+    queryFn: getFavorites,
+    enabled: sessionKey !== 'guest',
     staleTime: STALE_TIMES.SEMI_DYNAMIC,
     gcTime: GC_TIMES.MEDIUM,
   });
 
-export function useToggleFavorite(userId: string) {
-  const qc = useQueryClient();
-  const key = queryKeys.favorites.list(userId);
+export function useFavorites() {
+  return useQuery(favoritesOptions(useSessionKey()));
+}
 
-  return useMutation({
-    mutationFn: ({ unitId, isFavorited }: FavoriteToggleInput) => (isFavorited ? removeFavorite(unitId) : addFavorite(unitId)),
+export function useIsFavorited(unitId: number) {
+  return useQuery({
+    ...favoritesOptions(useSessionKey()),
+    select: (favorites) => favorites.some((f) => f.unit_id === unitId),
+  });
+}
+
+interface ToggleFavoriteVars {
+  unitId: number;
+  isFavorited: boolean;
+}
+
+interface ToggleFavoriteContext {
+  previous: Favorite[] | undefined;
+}
+
+export function useToggleFavorite() {
+  const sessionKey = useSessionKey();
+  const qc = useQueryClient();
+  const key = queryKeys.favorites.list(sessionKey);
+
+  return useMutation<Favorite | { message: string }, Error, ToggleFavoriteVars, ToggleFavoriteContext>({
+    mutationFn: ({ unitId, isFavorited }) => (isFavorited ? removeFavorite(unitId) : addFavorite(unitId)),
     onMutate: async ({ unitId, isFavorited }) => {
       await qc.cancelQueries({ queryKey: key });
-      const previous = qc.getQueryData<string[]>(key);
-      qc.setQueryData<string[]>(key, (old = []) => (isFavorited ? old.filter((id) => id !== unitId) : [...old, unitId]));
+      const previous = qc.getQueryData<Favorite[]>(key);
+      qc.setQueryData<Favorite[]>(key, (old = []) =>
+        isFavorited
+          ? old.filter((f) => f.unit_id !== unitId)
+          : [...old, { id: -unitId, unit_id: unitId, created_at: new Date().toISOString() }],
+      );
       return { previous };
     },
     onError: (_e, _v, ctx) => ctx && qc.setQueryData(key, ctx.previous),

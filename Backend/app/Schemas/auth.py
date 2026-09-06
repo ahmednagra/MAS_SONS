@@ -1,5 +1,4 @@
 # app/Schemas/auth.py
-
 # Login/register/refresh/magic-link request-response schemas (databaseschema.md §1).
 from datetime import datetime
 from typing import Optional

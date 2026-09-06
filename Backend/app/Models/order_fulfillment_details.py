@@ -1,5 +1,4 @@
 # app/Models/order_fulfillment_details.py
-
 # order_fulfillment_details — shipping/identity, collected at order time only (databaseschema.md §3).
 from sqlalchemy import Column, BigInteger, Text, TIMESTAMP, ForeignKey, CheckConstraint, Index, func
 from sqlalchemy.orm import relationship
@@ -8,10 +7,7 @@ from app.Models.base import Base
 
 
 class OrderFulfillmentDetail(Base):
-    """Shipping address and identity-verification record, collected only once an order
-    is actually placed. `identity_document_url` points at a signed-URL upload
-    (app/Core/Storage/) — the raw passport/ID number itself is never a database column.
-    """
+    """Shipping address and identity-verification record, collected only once an order is actually placed."""
 
     __tablename__ = "order_fulfillment_details"
 

@@ -1,5 +1,4 @@
 # app/Models/quote_requests.py
-
 # quote_requests — 'Get a Quote' (databaseschema.md §3).
 from sqlalchemy import Column, BigInteger, Text, Numeric, TIMESTAMP, ForeignKey, CheckConstraint, Index, func
 from sqlalchemy.dialects.postgresql import CITEXT
@@ -9,11 +8,7 @@ from app.Models.base import Base
 
 
 class QuoteRequest(Base):
-    """'Get a Quote' — a buyer or guest asks for a delivered price on a specific unit.
-
-    Guest-allowed: user_id is nullable; contact_name/email/whatsapp follow the shared
-    GuestContact shape (sharedinfrastructure.md §5).
-    """
+    """'Get a Quote' — a buyer or guest asks for a delivered price on a specific unit."""
 
     __tablename__ = "quote_requests"
 

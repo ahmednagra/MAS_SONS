@@ -1,5 +1,4 @@
 # app/Models/units.py
-
 # units — the stock catalog, category-discriminated (databaseschema.md §2).
 from sqlalchemy import (
     Column, BigInteger, SmallInteger, Integer, Text, Numeric, Boolean, TIMESTAMP,
@@ -12,11 +11,7 @@ from app.Models.base import Base
 
 
 class Unit(Base):
-    """The stock catalog — one row per vehicle or equipment unit for sale.
-
-    `category` discriminates vehicle vs. equipment; one table avoids UNION'ing two
-    near-identical catalogs on every browse/search query.
-    """
+    """The stock catalog — one row per vehicle or equipment unit for sale."""
 
     __tablename__ = "units"
 
@@ -44,8 +39,7 @@ class Unit(Base):
     fuel_type = Column(Text)
     transmission = Column(Text)
     description = Column(Text, nullable=False)
-    # search_vector TSVECTOR GENERATED ALWAYS AS (...) STORED — a DB-generated column;
-    # mapped read-only so the ORM never tries to write it.
+    # search_vector TSVECTOR GENERATED ALWAYS AS (...) STORED — a DB-generated column; mapped read-only so the ORM never tries to write it.
     search_vector = Column(TSVECTOR)
     status = Column(Text, nullable=False, server_default="in_stock")
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=func.now())

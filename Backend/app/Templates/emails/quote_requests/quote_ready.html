@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 style="margin-top:0;">Your quote is ready</h2>
+<p>Hi {{ contact_name }}, here is your delivered price for <strong>{{ unit_make }} {{ unit_model }} ({{ unit_year }})</strong>:</p>
+<p style="font-size:24px;font-weight:bold;">${{ "%.2f"|format(quoted_price_usd) }} USD ({{ incoterm }})</p>
+<p>Reply to this email or contact us to proceed with your order.</p>
+<p style="color:#888888;">Reference: #{{ quote_request_id }}</p>
+{% endblock %}

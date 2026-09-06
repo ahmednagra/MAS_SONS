@@ -1,5 +1,4 @@
 # app/Models/reviews.py
-
 # reviews — buyer-submitted, quote-request-verified (databaseschema.md §5).
 from sqlalchemy import Column, BigInteger, SmallInteger, Text, TIMESTAMP, ForeignKey, CheckConstraint, Index, func
 from sqlalchemy.orm import relationship
@@ -8,10 +7,7 @@ from app.Models.base import Base
 
 
 class Review(Base):
-    """Buyer-submitted, country-segmented testimonials tied to a real quote request
-    (the verification anchor). `rating` is optional and secondary — a country-segmented
-    written testimonial is the stronger trust signal in this business than a star average.
-    """
+    """Buyer-submitted, country-segmented testimonials tied to a real quote request (the verification anchor)."""
 
     __tablename__ = "reviews"
 

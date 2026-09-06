@@ -1,5 +1,4 @@
 # app/Models/features.py
-
 # features — controlled equipment/options vocabulary (databaseschema.md §2).
 from sqlalchemy import Column, BigInteger, Text, TIMESTAMP, ForeignKey, CheckConstraint, Index, func
 from sqlalchemy.orm import relationship
@@ -8,10 +7,7 @@ from app.Models.base import Base
 
 
 class Feature(Base):
-    """Controlled vocabulary of options/equipment — the Feature Audit's 'structured
-    options/equipment list'. A lookup table, not free text, so the same feature is
-    never spelled three different ways across units.
-    """
+    """Controlled vocabulary of options/equipment — the Feature Audit's 'structured options/equipment list'."""
 
     __tablename__ = "features"
 

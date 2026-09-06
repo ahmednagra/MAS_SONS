@@ -1,5 +1,4 @@
 # app/Models/auth_identities.py
-
 # auth_identities (databaseschema.md §1).
 from sqlalchemy import Column, BigInteger, Text, TIMESTAMP, ForeignKey, CheckConstraint, Index, func
 from sqlalchemy.orm import relationship

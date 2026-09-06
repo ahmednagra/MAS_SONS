@@ -1,13 +1,13 @@
 # app/Controllers/StockController.py
-
 # Stock catalog endpoints — list/search, detail, admin update (databaseschema.md §2).
-# Thin delegation to StockService; catches unexpected exceptions, logs, and re-raises
-# (codingconventions.md §3) — StockService itself raises the actual HTTPException.
+from typing import Optional
+
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.Schemas.stock import (
-    StockCountResponse, StockFacetsResponse, StockListResponse, StockSearchParams, UnitResponse,
+    StockCountResponse, StockFacetsResponse, StockListResponse, StockSearchParams,
+    UnitInsightsResponse, UnitPriceUpdate, UnitResponse,
 )
 from app.Services.StockService import StockService
 from app.Utils.Logger import logger
@@ -35,13 +35,23 @@ class StockController:
             raise
 
     @staticmethod
-    def facets(db: Session) -> StockFacetsResponse:
+    def facets(db: Session, category: Optional[str] = None) -> StockFacetsResponse:
         try:
-            return StockService.facets(db)
+            return StockService.facets(db, category)
         except HTTPException:
             raise
         except Exception as e:
             logger.error(f"Error in facets: {e}")
+            raise
+
+    @staticmethod
+    def get_by_ids(ids: list[int], db: Session) -> StockListResponse:
+        try:
+            return StockService.get_by_ids(ids, db)
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error in get_by_ids: {e}")
             raise
 
     @staticmethod
@@ -52,4 +62,24 @@ class StockController:
             raise
         except Exception as e:
             logger.error(f"Error in get_by_slug: {e}")
+            raise
+
+    @staticmethod
+    def insights(slug: str, db: Session) -> UnitInsightsResponse:
+        try:
+            return StockService.insights(slug, db)
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error in insights: {e}")
+            raise
+
+    @staticmethod
+    def update_price(id: int, data: UnitPriceUpdate, db: Session) -> UnitResponse:
+        try:
+            return StockService.update_price(id, data, db)
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error in update_price: {e}")
             raise

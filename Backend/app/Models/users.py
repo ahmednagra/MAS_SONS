@@ -1,7 +1,6 @@
 # app/Models/users.py
-
 # users (databaseschema.md §1).
-from sqlalchemy import Column, BigInteger, Text, Boolean, TIMESTAMP, ForeignKey, CheckConstraint, Index, func
+from sqlalchemy import Column, BigInteger, Text, TIMESTAMP, ForeignKey, CheckConstraint, Index, func
 from sqlalchemy.orm import relationship
 
 from app.Models.base import Base

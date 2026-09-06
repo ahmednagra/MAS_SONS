@@ -4,18 +4,21 @@ import { logger } from '@/lib/logger';
 import { extractBearerToken } from '@/lib/auth-utils';
 import { submitQuoteRequestServer } from '@/services/quote-requests/quote-requests.server';
 
+// Mirrors QuoteRequestCreate (app/Schemas/quote_request.py) field-for-field.
 const Schema = z.object({
-  unitId: z.string().min(1),
-  destinationCountry: z.string().length(2),
+  unit_id: z.number().int().positive(),
+  contact_name: z.string().trim().min(2).max(120),
+  contact_email: z.string().trim().email().max(254),
+  contact_whatsapp: z.string().trim().max(32).optional().nullable(),
+  destination_country: z.string().trim().length(2).transform((v) => v.toUpperCase()),
   incoterm: z.enum(['FOB', 'CFR', 'CIF']),
-  email: z.string().email(),
-  whatsapp: z.string().optional(),
+  notes: z.string().trim().max(2000).optional().nullable(),
 });
 
 export async function POST(request: NextRequest) {
   const authToken = extractBearerToken(request);
 
-  const parsed = Schema.safeParse(await request.json());
+  const parsed = Schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message, error_code: 'VALIDATION_ERROR' }, { status: 400 });
   }

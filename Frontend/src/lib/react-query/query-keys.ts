@@ -12,6 +12,20 @@ export const queryKeys = {
     list: (userId: string) => [...queryKeys.quoteRequests.all, 'list', userId] as const,
     detail: (id: string) => [...queryKeys.quoteRequests.all, 'detail', id] as const,
   },
+  orders: {
+    all: ['orders'] as const,
+    list: (userId: string) => [...queryKeys.orders.all, 'list', userId] as const,
+    detail: (id: string) => [...queryKeys.orders.all, 'detail', id] as const,
+  },
+  notifications: {
+    all: ['notifications'] as const,
+    list: (userId: string) => [...queryKeys.notifications.all, 'list', userId] as const,
+    preferences: (userId: string) => [...queryKeys.notifications.all, 'preferences', userId] as const,
+  },
+  reviews: {
+    all: ['reviews'] as const,
+    approved: (country?: string) => [...queryKeys.reviews.all, 'approved', country ?? 'all'] as const,
+  },
   // Single stock pool — not per-dealer inventories.
   stock: {
     all: ['stock'] as const,

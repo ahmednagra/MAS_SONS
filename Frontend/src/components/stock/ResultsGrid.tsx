@@ -1,57 +1,25 @@
-import Link from 'next/link';
-import Image from 'next/image';
+import { UnitCard } from './UnitCard';
+import type { Destination } from '@/types/destinations';
 import type { UnitSummary } from '@/types/stock';
 
-export function ResultsGrid({ units }: { units: UnitSummary[] }) {
+// First cards are the LCP candidate on storefront pages; preload them instead of lazy-loading.
+const ABOVE_FOLD_COUNT = 2;
+
+export function ResultsGrid({
+  units,
+  destinations,
+  nowMs,
+}: {
+  units: UnitSummary[];
+  destinations?: Destination[];
+  nowMs?: number;
+}) {
   if (!units.length) return <p className="text-sub">No units match your search.</p>;
   return (
     <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
-      {units.map((unit) => (
-        <UnitCard key={unit.id} unit={unit} />
+      {units.map((unit, index) => (
+        <UnitCard key={unit.id} unit={unit} priority={index < ABOVE_FOLD_COUNT} destinations={destinations} nowMs={nowMs} />
       ))}
     </div>
-  );
-}
-
-function UnitCard({ unit }: { unit: UnitSummary }) {
-  const spec = unit.category === 'vehicle'
-    ? [unit.mileage_km != null ? `${unit.mileage_km.toLocaleString('en-US')} km` : null].filter(Boolean)
-    : [unit.operating_hours != null ? `${unit.operating_hours.toLocaleString('en-US')} hrs` : null].filter(Boolean);
-
-  return (
-    <Link
-      href={`/stock/${unit.slug}`}
-      className="group flex flex-col overflow-hidden rounded-sm border border-line bg-surface transition-shadow hover:shadow-lg"
-    >
-      <div className="relative aspect-[4/3] overflow-hidden bg-paper">
-        {unit.thumbnail_url && (
-          <Image
-            src={unit.thumbnail_url}
-            alt={`${unit.year} ${unit.make} ${unit.model}`}
-            fill
-            sizes="(max-width: 768px) 100vw, 320px"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-        )}
-        <span className="absolute left-2.5 top-2.5 animate-[gradepulse_3.2s_ease-in-out_infinite] rounded-sm bg-ink/70 px-2 py-1 text-xs font-semibold tracking-wide text-paper">
-          GRADE {unit.auction_grade}
-        </span>
-      </div>
-      <div className="flex flex-1 flex-col gap-3 p-4">
-        <div>
-          <h3 className="text-[15px] font-semibold leading-tight text-ink">
-            {unit.year} {unit.make} {unit.model}
-          </h3>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-sub">{spec.join(' · ')}</p>
-        </div>
-        <div className="mt-auto flex items-baseline justify-between border-t border-line pt-3">
-          <div>
-            <p className="tabular-nums text-lg font-semibold text-ink">${unit.price_usd.toLocaleString('en-US')}</p>
-            <p className="text-xs text-sub">FOB {unit.port}</p>
-          </div>
-          <span className="text-sm font-semibold text-accent">Get quote →</span>
-        </div>
-      </div>
-    </Link>
   );
 }

@@ -1,7 +1,7 @@
 # app/Schemas/quote_request.py
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 
 class QuoteRequestCreate(BaseModel):
@@ -12,6 +12,11 @@ class QuoteRequestCreate(BaseModel):
     destination_country: str
     incoterm: str
     notes: Optional[str] = None
+
+    @field_validator("destination_country")
+    @classmethod
+    def _normalize_country_code(cls, v: str) -> str:
+        return v.upper()
 
 
 class QuoteRequestResponse(BaseModel):
@@ -30,6 +35,9 @@ class QuoteRequestResponse(BaseModel):
     quoted_at: Optional[datetime] = None
     notes: Optional[str] = None
     created_at: datetime
+    unit_make: Optional[str] = None
+    unit_model: Optional[str] = None
+    unit_year: Optional[int] = None
 
 
 class QuoteRequestQuote(BaseModel):
