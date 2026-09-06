@@ -30,6 +30,7 @@ export const queryKeys = {
   stock: {
     all: ['stock'] as const,
     list: (params: object) => [...queryKeys.stock.all, 'list', params] as const,
+    facets: (params: object) => [...queryKeys.stock.all, 'facets', params] as const,
     detail: (id: string) => [...queryKeys.stock.all, 'detail', id] as const,
   },
   inquiries: {

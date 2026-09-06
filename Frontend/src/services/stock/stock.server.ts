@@ -30,8 +30,11 @@ export const updateUnitPriceServer = async (id: number, data: UnitPriceUpdate, a
 export const getActiveStockCountServer = async () =>
   unwrap(await serverApiClient.get<{ count: number }>(ENDPOINTS.STOCK.COUNT)).count;
 
-export const getStockFacetsServer = async (category?: UnitCategory) =>
-  unwrap(await serverApiClient.get<StockFacets>(`${ENDPOINTS.STOCK.FACETS}${category ? `?category=${category}` : ''}`));
+/** Facets scoped by a category or by any combination of list filters (counts cascade). */
+export const getStockFacetsServer = async (scope?: UnitCategory | StockSearchParams) => {
+  const params = typeof scope === 'string' ? { category: scope } : scope ?? {};
+  return unwrap(await serverApiClient.get<StockFacets>(`${ENDPOINTS.STOCK.FACETS}${toQueryString(params)}`));
+};
 
 const SITEMAP_PAGE_SIZE = 100; // matches the backend's StockSearchParams.limit cap (le=100)
 

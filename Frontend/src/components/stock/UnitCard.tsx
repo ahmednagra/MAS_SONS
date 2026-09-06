@@ -63,11 +63,11 @@ export function UnitCard({ unit, priority = false, destinations, nowMs }: UnitCa
           )}
           {/* Readable surface for the badges regardless of the photo. */}
           <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 to-transparent" />
-          <span className="absolute bottom-2.5 left-2.5 rounded-sm bg-white/95 px-2 py-1 font-mono text-[10.5px] font-medium tracking-wider text-[#1b2027]">
+          <span className="absolute bottom-2.5 left-2.5 rounded-sm bg-white/95 px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-[#1b2027]">
             Grade {unit.auction_grade}
           </span>
           {tag && (
-            <span className="absolute bottom-2.5 right-2.5 rounded-sm bg-[#1b2027]/85 px-2 py-1 font-mono text-[10.5px] font-medium tracking-wider text-white">
+            <span className="absolute bottom-2.5 right-2.5 rounded-sm bg-[#1b2027]/85 px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-white">
               {tag}
             </span>
           )}

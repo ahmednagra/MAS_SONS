@@ -3,9 +3,12 @@ import Link from 'next/link';
 import { cacheLife, cacheTag } from 'next/cache';
 import { listDestinationsServer } from '@/services/destinations';
 import { SHIP_TO_PICKER_ID } from '@/components/layout/DestinationPicker';
-import { PreviousPageButton, ShipToSummary, SortSelect, isSortKey } from '@/components/stock/StockToolbar';
+import { PreviousPageButton, ShipToSummary, SortSelect } from '@/components/stock/StockToolbar';
+import { isSortKey } from '@/lib/stock-sort';
 import { searchStockServer } from '@/services/stock/stock.server';
-import { ActiveFilters, FINDER_KEYS, StockFinder, type FinderValues } from '@/components/stock/StockFinder';
+import { ActiveFilters } from '@/components/stock/ActiveFilters';
+import { FilterPanel } from '@/components/ui';
+import { FINDER_KEYS, facetParams, type FinderValues } from '@/lib/stock-filters';
 import { getStockFacetsServer } from '@/services/stock/stock.server';
 import { ResultsGrid } from '@/components/stock/ResultsGrid';
 import type { StockSearchParams } from '@/types/stock';
@@ -14,12 +17,13 @@ const PAGE_SIZE = 24;
 
 type RawParams = Record<string, string | string[] | undefined>;
 
-// Facets for the filter panel — refreshed with the stock tag, hourly backstop.
-async function getFacets() {
+// Facets for the filter panel, keyed by the current filters so the server-rendered counts
+// match what the live cascade will show — refreshed with the stock tag, hourly backstop.
+async function getFacets(params: StockSearchParams) {
   'use cache';
   cacheLife('hours');
   cacheTag('stock');
-  return getStockFacetsServer();
+  return getStockFacetsServer(params);
 }
 
 // Ports for the picker and the cards' C&F links — reference data, cached for days.
@@ -78,9 +82,11 @@ async function finderValues(searchParams: Promise<RawParams>): Promise<FinderVal
 }
 
 async function StockFinderPanel({ searchParams }: { searchParams: Promise<RawParams> }) {
-  const [values, facets] = await Promise.all([finderValues(searchParams), getFacets()]);
-  // Dynamic render (searchParams awaited above), so reading the clock here is fine.
-  return <StockFinder facets={facets} yearNow={new Date().getFullYear()} values={values} />;
+  const values = await finderValues(searchParams);
+  const facets = await getFacets(facetParams(values));
+  // Keyed by the URL's filters: Clear (and every applied search) remounts the panel so its
+  // local selection state matches the address bar instead of surviving the navigation.
+  return <FilterPanel key={JSON.stringify(values)} facets={facets} values={values} layout="sidebar" />;
 }
 
 async function StockResults({ searchParams }: { searchParams: Promise<RawParams> }) {
@@ -112,8 +118,9 @@ async function StockResults({ searchParams }: { searchParams: Promise<RawParams>
     limit: PAGE_SIZE,
   };
   const { items: fetched, next_cursor, next_cursor_value, total } = await searchStockServer(query);
-  // Units without a photo sink to the end of the page so placeholders never break the first rows.
-  const items = [...fetched].sort((a, b) => Number(!a.thumbnail_url) - Number(!b.thumbnail_url));
+  // In the default order, units without a photo sink to the end of the page so placeholders never
+  // break the first rows; an explicit sort keeps the exact server order.
+  const items = sort === 'newest' ? [...fetched].sort((a, b) => Number(!a.thumbnail_url) - Number(!b.thumbnail_url)) : fetched;
   const rangeLabel = items.length === 0
     ? 'No units match'
     : total != null ? `1–${items.length} of ${total.toLocaleString('en-US')}` : `${items.length} units${next_cursor != null ? ' · more below' : ''}`;

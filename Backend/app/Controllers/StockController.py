@@ -35,9 +35,9 @@ class StockController:
             raise
 
     @staticmethod
-    def facets(db: Session, category: Optional[str] = None) -> StockFacetsResponse:
+    def facets(db: Session, params: Optional[StockSearchParams] = None) -> StockFacetsResponse:
         try:
-            return StockService.facets(db, category)
+            return StockService.facets(db, params)
         except HTTPException:
             raise
         except Exception as e:

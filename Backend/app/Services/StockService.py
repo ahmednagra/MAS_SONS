@@ -50,44 +50,46 @@ def _percentile_rank(values: Sequence[float], x: float) -> Optional[int]:
 
 class StockService:
     @staticmethod
-    def search(params: StockSearchParams, db: Session) -> StockListResponse:
-        stmt = select(Unit).where(Unit.deleted_at.is_(None))
-
-        # Every filter here maps to one of units' own indexed columns (idx_units_status_category, idx_units_make_model, idx_units_grade, idx_units_price) — a…
+    def _filters(params: StockSearchParams, *, exclude: str = "") -> dict[str, object]:
+        """Filter name -> SQL condition for every set param; `exclude` drops one so a facet can count its own alternatives."""
+        conditions: dict[str, object] = {}
         if params.category:
-            stmt = stmt.where(Unit.category == params.category)
+            conditions["category"] = Unit.category == params.category
         if params.body_type:
-            stmt = stmt.where(Unit.body_type == params.body_type)
+            conditions["body_type"] = Unit.body_type == params.body_type
         if params.make:
-            stmt = stmt.where(Unit.make == params.make)
+            conditions["make"] = Unit.make == params.make
         if params.model:
-            stmt = stmt.where(Unit.model == params.model)
+            conditions["model"] = Unit.model == params.model
         if params.year_min is not None:
-            stmt = stmt.where(Unit.year >= params.year_min)
+            conditions["year_min"] = Unit.year >= params.year_min
         if params.year_max is not None:
-            stmt = stmt.where(Unit.year <= params.year_max)
+            conditions["year_max"] = Unit.year <= params.year_max
         if params.price_min is not None:
-            stmt = stmt.where(Unit.price_usd >= params.price_min)
+            conditions["price_min"] = Unit.price_usd >= params.price_min
         if params.price_max is not None:
-            stmt = stmt.where(Unit.price_usd <= params.price_max)
+            conditions["price_max"] = Unit.price_usd <= params.price_max
         if params.mileage_max_km is not None:
-            stmt = stmt.where(Unit.mileage_km <= params.mileage_max_km)
+            conditions["mileage_max_km"] = Unit.mileage_km <= params.mileage_max_km
         if params.auction_grade_min:
-            # auction_grade is an ordered ranking stored as text ('5' best ...
-            rank = {"5": 6, "4.5": 5, "4": 4, "3.5": 3, "3": 2, "R": 1, "RA": 0}
-            min_rank = rank.get(params.auction_grade_min, 0)
-            acceptable = [g for g, r in rank.items() if r >= min_rank]
-            stmt = stmt.where(Unit.auction_grade.in_(acceptable))
+            min_rank = GRADE_RANK.get(params.auction_grade_min, 0)
+            conditions["auction_grade_min"] = Unit.auction_grade.in_([g for g, r in GRADE_RANK.items() if r >= min_rank])
         if params.steering_position:
-            stmt = stmt.where(Unit.steering_position == params.steering_position)
+            conditions["steering_position"] = Unit.steering_position == params.steering_position
         if params.fuel_type:
-            stmt = stmt.where(Unit.fuel_type == params.fuel_type)
+            conditions["fuel_type"] = Unit.fuel_type == params.fuel_type
         if params.transmission:
-            stmt = stmt.where(Unit.transmission == params.transmission)
+            conditions["transmission"] = Unit.transmission == params.transmission
         if params.keyword:
-            # Free-text search: units.search_vector (a GIN-indexed generated tsvector column, databaseschema.md §2) is the real full-text path once the database…
             pattern = f"%{params.keyword}%"
-            stmt = stmt.where(or_(Unit.make.ilike(pattern), Unit.model.ilike(pattern), Unit.description.ilike(pattern)))
+            conditions["keyword"] = or_(Unit.make.ilike(pattern), Unit.model.ilike(pattern), Unit.description.ilike(pattern))
+        conditions.pop(exclude, None)
+        return conditions
+
+    @staticmethod
+    def search(params: StockSearchParams, db: Session) -> StockListResponse:
+        # Every filter maps to an indexed units column (idx_units_status_category, idx_units_make_model, idx_units_grade, idx_units_price).
+        stmt = select(Unit).where(Unit.deleted_at.is_(None), *StockService._filters(params).values())
 
         # First page only: a bounded count so the client can say "1-24 of N".
         total = None
@@ -176,56 +178,62 @@ class StockService:
         return StockCountResponse(count=int(total))
 
     @staticmethod
-    def facets(db: Session, category: Optional[str] = None) -> StockFacetsResponse:
-        """Bounded GROUP BY / MIN / MAX queries over units columns (idx_units_status_category, idx_units_make_model, idx_units_grade, idx_units_price) — never a…"""
+    def facets(db: Session, params: Optional[StockSearchParams] = None) -> StockFacetsResponse:
+        """Cascaded facet counts: every figure respects the current filters, and the make and
+        body-type lists exclude their own filter so the user can still switch selection.
+        Bounded GROUP BY / MIN / MAX over indexed columns; no unit rows are materialised."""
+        params = params or StockSearchParams()
         active = StockService._active()
-        scoped = active + ((Unit.category == category,) if category in ("vehicle", "equipment") else ())
+        filters = StockService._filters(params)
+        scoped = active + tuple(filters.values())
 
-        by_category = dict(
-            db.execute(
-                select(Unit.category, func.count(Unit.id)).where(*active).group_by(Unit.category)
-            ).all()
-        )
+        # Vehicle/equipment split ignores the category filter (it *is* the category picker).
+        by_category = dict(db.execute(
+            select(Unit.category, func.count(Unit.id))
+            .where(*active, *StockService._filters(params, exclude="category").values())
+            .group_by(Unit.category)
+        ).all())
 
-        # One GROUPING SETS scan yields every dimension's counts; each is then capped in Python.
-        dims = (Unit.make, Unit.body_type, Unit.steering_position, Unit.fuel_type, Unit.auction_grade)
+        def grouped(column, limit: Optional[int], exclude: str):
+            conditions = active + tuple(StockService._filters(params, exclude=exclude).values())
+            stmt = (
+                select(column, func.count(Unit.id))
+                .where(*conditions, column.is_not(None))
+                .group_by(column)
+                .order_by(func.count(Unit.id).desc(), column.asc())
+            )
+            if limit:
+                stmt = stmt.limit(limit)
+            return [FacetCount(value=str(v), count=int(c)) for v, c in db.execute(stmt).all()]
+
+        # Dimensions without their own select filter share one GROUPING SETS scan.
+        dims = (Unit.steering_position, Unit.fuel_type, Unit.auction_grade)
         rows = db.execute(
-            select(*dims, func.count(Unit.id).label("n"))
-            .where(*scoped)
-            .group_by(func.grouping_sets(*[tuple_(d) for d in dims]))
+            select(*dims, func.count(Unit.id).label("n")).where(*scoped).group_by(func.grouping_sets(*[tuple_(d) for d in dims]))
         ).all()
-        by_dim: dict[str, list[tuple[str, int]]] = {d.key: [] for d in dims}
+        by_dim: dict[str, list[FacetCount]] = {d.key: [] for d in dims}
         for row in rows:
             for i, d in enumerate(dims):
                 if row[i] is not None:
-                    by_dim[d.key].append((str(row[i]), int(row.n)))
+                    by_dim[d.key].append(FacetCount(value=str(row[i]), count=int(row.n)))
                     break
-
-        def grouped(column, limit: Optional[int]):
-            ranked = sorted(by_dim[column.key], key=lambda vc: (-vc[1], vc[0]))
-            return [FacetCount(value=v, count=c) for v, c in (ranked[:limit] if limit else ranked)]
+        for key in by_dim:
+            by_dim[key].sort(key=lambda f: (-f.count, f.value))
 
         year_min, year_max, price_min, price_max = db.execute(
-            select(func.min(Unit.year), func.max(Unit.year), func.min(Unit.price_usd), func.max(Unit.price_usd))
-            .where(*scoped)
+            select(func.min(Unit.year), func.max(Unit.year), func.min(Unit.price_usd), func.max(Unit.price_usd)).where(*scoped)
         ).one()
+        total = int(db.execute(select(func.count(Unit.id)).where(*scoped)).scalar_one())
 
-        vehicles = int(by_category.get("vehicle", 0))
-        equipment = int(by_category.get("equipment", 0))
-        total = vehicles + equipment
-        if category == "vehicle":
-            total = vehicles
-        elif category == "equipment":
-            total = equipment
         return StockFacetsResponse(
             total=total,
-            vehicles=vehicles,
-            equipment=equipment,
-            makes=grouped(Unit.make, FACET_MAKES_LIMIT),
-            body_types=grouped(Unit.body_type, FACET_BODY_TYPES_LIMIT),
-            steering_positions=grouped(Unit.steering_position, None),   # at most 2 values (CHECK)
-            fuel_types=grouped(Unit.fuel_type, FACET_FUEL_TYPES_LIMIT),
-            grades=grouped(Unit.auction_grade, None),                  # at most 7 values (CHECK)
+            vehicles=int(by_category.get("vehicle", 0)),
+            equipment=int(by_category.get("equipment", 0)),
+            makes=grouped(Unit.make, FACET_MAKES_LIMIT, exclude="make"),
+            body_types=grouped(Unit.body_type, FACET_BODY_TYPES_LIMIT, exclude="body_type"),
+            steering_positions=by_dim["steering_position"],
+            fuel_types=by_dim["fuel_type"][:FACET_FUEL_TYPES_LIMIT],
+            grades=by_dim["auction_grade"],
             year_min=int(year_min) if year_min is not None else None,
             year_max=int(year_max) if year_max is not None else None,
             price_min=float(price_min) if price_min is not None else None,

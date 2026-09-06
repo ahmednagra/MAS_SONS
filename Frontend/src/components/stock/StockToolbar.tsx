@@ -3,23 +3,23 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useDestinationPreference } from '@/lib/destination-preference';
 import type { Destination } from '@/types/destinations';
 
-export const SORT_OPTIONS = [
-  { value: 'newest', label: 'Newest arrivals' },
-  { value: 'price_asc', label: 'Price: low to high' },
-  { value: 'price_desc', label: 'Price: high to low' },
-  { value: 'year_desc', label: 'Year: newest first' },
-  { value: 'mileage_asc', label: 'Mileage: lowest first' },
-  { value: 'grade_desc', label: 'Grade: best first' },
-] as const;
-export type SortKey = (typeof SORT_OPTIONS)[number]['value'];
-export const isSortKey = (v: unknown): v is SortKey => SORT_OPTIONS.some((o) => o.value === v);
+import { SORT_OPTIONS, type SortKey } from '@/lib/stock-sort';
 
 /** Sort select: rewrites the URL, dropping the cursor so a new order always starts at page one. */
-export function SortSelect({ value }: { value: SortKey }) {
-  const router = useRouter();
+export function SortSelect({ value, fixed }: { value: SortKey; fixed?: Record<string, string> }) {
+  // Landings pass `fixed` and must not read the URL: useSearchParams would make a cached page dynamic (Next E1433).
+  return fixed ? <SortControl value={value} base={new URLSearchParams(fixed)} /> : <SortFromUrl value={value} />;
+}
+
+function SortFromUrl({ value }: { value: SortKey }) {
   const params = useSearchParams();
+  return <SortControl value={value} base={params} />;
+}
+
+function SortControl({ value, base }: { value: SortKey; base: URLSearchParams | ReturnType<typeof useSearchParams> }) {
+  const router = useRouter();
   const change = (next: string) => {
-    const q = new URLSearchParams(params);
+    const q = new URLSearchParams(base);
     q.delete('cursor');
     q.delete('cursor_value');
     if (next === 'newest') q.delete('sort');

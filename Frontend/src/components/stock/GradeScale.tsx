@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { AuctionGrade } from '@/types/stock';
 
 const SCALE: Array<{ grade: AuctionGrade; title: string; note: string }> = [
@@ -38,7 +39,8 @@ export function GradeScale({ grade }: { grade: AuctionGrade }) {
 
       <p className="mt-4 text-sm leading-relaxed text-sub">
         <strong className="font-semibold text-ink">Grade {current.grade} — {current.title}.</strong> {current.note}{' '}
-        Grades are assigned by independent auction-house inspectors in Japan, not by the seller. We share the original sheet on request so you can verify every mark yourself.
+        Grades are assigned by independent auction-house inspectors in Japan, not by the seller. We share the original sheet on request so you can verify every mark yourself.{' '}
+        <Link href="/verification" className="font-medium text-ink underline-offset-4 hover:underline">How grades and sheet symbols work →</Link>
       </p>
     </figure>
   );

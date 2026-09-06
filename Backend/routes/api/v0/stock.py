@@ -1,6 +1,5 @@
 # routes/api/v0/stock.py
 # Stock list/search, detail, admin update endpoints (databaseschema.md §2).
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -27,11 +26,9 @@ def count_stock(db: Session = Depends(get_db)):
 
 
 @router.get("/facets", response_model=StockFacetsResponse)
-def stock_facets(
-    category: Optional[str] = Query(default=None, pattern="^(vehicle|equipment)$"),
-    db: Session = Depends(get_db),
-):
-    return StockController.facets(db, category)
+def stock_facets(params: StockSearchParams = Depends(), db: Session = Depends(get_db)):
+    """Option counts that cascade from the same filters GET /stock accepts (cursor/limit/sort ignored)."""
+    return StockController.facets(db, params)
 
 
 @router.get("/by-ids", response_model=StockListResponse)
