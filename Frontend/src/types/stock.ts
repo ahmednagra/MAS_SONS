@@ -80,13 +80,19 @@ export interface StockSearchParams {
   fuel_type?: string;
   transmission?: string;
   keyword?: string;
+  sort?: 'newest' | 'price_asc' | 'price_desc' | 'year_desc' | 'mileage_asc' | 'grade_desc';
   cursor?: number;
+  /** Sort-column value of the last unit on the previous page (non-newest sorts). */
+  cursor_value?: string;
   limit?: number;
 }
 
 export interface StockListResponse {
   items: UnitSummary[];
   next_cursor?: number | null;
+  next_cursor_value?: string | null;
+  /** Matching units; only present on the first page. */
+  total?: number | null;
 }
 
 // ---- GET /stock/facets (StockFacetsResponse) ---------------------------------

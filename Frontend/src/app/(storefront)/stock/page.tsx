@@ -2,10 +2,10 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { cacheLife, cacheTag } from 'next/cache';
 import { listDestinationsServer } from '@/services/destinations';
-import { DestinationPicker } from '@/components/layout/DestinationPicker';
+import { SHIP_TO_PICKER_ID } from '@/components/layout/DestinationPicker';
+import { PreviousPageButton, ShipToSummary, SortSelect, isSortKey } from '@/components/stock/StockToolbar';
 import { searchStockServer } from '@/services/stock/stock.server';
 import { ActiveFilters, FINDER_KEYS, StockFinder, type FinderValues } from '@/components/stock/StockFinder';
-import { PageHeader } from '@/components/layout/PageHeader';
 import { getStockFacetsServer } from '@/services/stock/stock.server';
 import { ResultsGrid } from '@/components/stock/ResultsGrid';
 import type { StockSearchParams } from '@/types/stock';
@@ -45,23 +45,19 @@ export const metadata = {
  */
 export default function StockPage({ searchParams }: { searchParams: Promise<RawParams> }) {
   return (
-    <main className="mx-auto max-w-[1200px] px-4 py-10">
-      <PageHeader eyebrow="Stock" title="In stock in Japan" description="Auction grade, mileage and steering on every card. Prices are FOB the Japanese port shown; pick your port for a C&F quote." />
-      <div className="grid gap-8 lg:grid-cols-[280px_1fr] lg:items-start">
-        <aside className="lg:sticky lg:top-[88px]">
+    <main id="top" className="mx-auto max-w-[1200px] px-4 py-6 sm:py-7">
+      {/* One-row header so the filter panel and the first cards fit in the first screen. */}
+      <header className="mb-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-[28px]">In stock in Japan</h1>
+        <p className="text-sm text-sub">Auction grade, mileage and steering on every card · FOB price at the Japanese port shown.</p>
+      </header>
+      <div className="grid gap-6 lg:grid-cols-[272px_1fr] lg:items-start">
+        <aside className="lg:sticky lg:top-[112px]">
           <Suspense fallback={<div className="h-12 rounded-sm border border-line bg-surface lg:h-[36rem]" aria-busy />}>
             <StockFinderPanel searchParams={searchParams} />
           </Suspense>
         </aside>
-        <section aria-label="Results" className="flex flex-col gap-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <Suspense fallback={null}>
-              <StockActiveFilters searchParams={searchParams} />
-            </Suspense>
-            <Suspense fallback={null}>
-              <StockDestinationPicker />
-            </Suspense>
-          </div>
+        <section aria-label="Results">
           <Suspense fallback={<p className="text-sub">Loading stock…</p>}>
             <StockResults searchParams={searchParams} />
           </Suspense>
@@ -87,20 +83,10 @@ async function StockFinderPanel({ searchParams }: { searchParams: Promise<RawPar
   return <StockFinder facets={facets} yearNow={new Date().getFullYear()} values={values} />;
 }
 
-async function StockActiveFilters({ searchParams }: { searchParams: Promise<RawParams> }) {
-  const values = await finderValues(searchParams);
-  // Keep the row's height stable so the picker does not jump when no filters are set.
-  return <div className="min-h-[1.75rem]"><ActiveFilters values={values} /></div>;
-}
-
-async function StockDestinationPicker() {
-  const destinations = await getDestinations();
-  return <DestinationPicker destinations={destinations} />;
-}
-
 async function StockResults({ searchParams }: { searchParams: Promise<RawParams> }) {
-  const [params, destinations] = await Promise.all([searchParams, getDestinations()]);
+  const [params, destinations, values] = await Promise.all([searchParams, getDestinations(), finderValues(searchParams)]);
   const cursor = params.cursor ? Number(params.cursor) : undefined;
+  const sort = isSortKey(params.sort) ? params.sort : 'newest';
   const str = (v: string | string[] | undefined) => (typeof v === 'string' && v !== '' ? v : undefined);
   const num = (v: string | string[] | undefined) => {
     const n = Number(str(v));
@@ -120,26 +106,49 @@ async function StockResults({ searchParams }: { searchParams: Promise<RawParams>
     steering_position: params.steering_position === 'LHD' || params.steering_position === 'RHD' ? params.steering_position : undefined,
     fuel_type: str(params.fuel_type),
     keyword: str(params.keyword),
+    sort,
     cursor,
+    cursor_value: str(params.cursor_value),
     limit: PAGE_SIZE,
   };
-  const { items, next_cursor } = await searchStockServer(query);
+  const { items: fetched, next_cursor, next_cursor_value, total } = await searchStockServer(query);
+  // Units without a photo sink to the end of the page so placeholders never break the first rows.
+  const items = [...fetched].sort((a, b) => Number(!a.thumbnail_url) - Number(!b.thumbnail_url));
+  const rangeLabel = items.length === 0
+    ? 'No units match'
+    : total != null ? `1–${items.length} of ${total.toLocaleString('en-US')}` : `${items.length} units${next_cursor != null ? ' · more below' : ''}`;
   const nextQuery = new URLSearchParams(Object.entries(params).filter((e): e is [string, string] => typeof e[1] === 'string'));
 
   return (
-    <div className="flex flex-col gap-6">
-      <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-sub">
-        {items.length === 0 ? 'No units match' : `Showing ${items.length} unit${items.length === 1 ? '' : 's'}${next_cursor != null ? ' · more below' : ''}`}
-      </p>
-      <ResultsGrid units={items} destinations={destinations} />
-      {next_cursor != null && (
-        <nav className="flex justify-center">
-          <Link
-            href={(() => { nextQuery.set('cursor', String(next_cursor)); return `/stock?${nextQuery.toString()}`; })()}
-            className="rounded-sm border border-line px-4 py-2 text-sm font-medium text-ink hover:bg-paper"
-          >
-            Next →
-          </Link>
+    <div className="flex flex-col gap-4">
+      {/* Single toolbar row: result count and active filters left, port picker right. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-line pb-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-sub">{rangeLabel}</p>
+          <ActiveFilters values={values} />
+        </div>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <ShipToSummary destinations={destinations} pickerId={SHIP_TO_PICKER_ID} />
+          <SortSelect value={sort} />
+        </div>
+      </div>
+      <ResultsGrid units={items} destinations={destinations} dense />
+      {(next_cursor != null || cursor != null) && (
+        <nav aria-label="Pagination" className="flex items-center justify-center gap-3">
+          {cursor != null && <PreviousPageButton />}
+          {next_cursor != null && (
+            <Link
+              href={(() => {
+                nextQuery.set('cursor', String(next_cursor));
+                if (next_cursor_value) nextQuery.set('cursor_value', next_cursor_value); else nextQuery.delete('cursor_value');
+                return `/stock?${nextQuery.toString()}`;
+              })()}
+              className="rounded-sm border border-line px-4 py-2 text-sm font-medium text-ink hover:bg-paper"
+            >
+              Next {PAGE_SIZE} →
+            </Link>
+          )}
+          <a href="#top" className="ml-2 text-xs font-medium text-sub underline-offset-4 hover:text-ink hover:underline">Back to top</a>
         </nav>
       )}
     </div>

@@ -2,7 +2,9 @@
 import { useDestinationPreference } from '@/lib/destination-preference';
 import type { Destination } from '@/types/destinations';
 
-export function DestinationPicker({ destinations, className = '' }: { destinations: Destination[]; className?: string }) {
+export const SHIP_TO_PICKER_ID = 'ship-to-picker';
+
+export function DestinationPicker({ destinations, className = '', id = SHIP_TO_PICKER_ID }: { destinations: Destination[]; className?: string; id?: string }) {
   const [code, setCode] = useDestinationPreference();
   if (!destinations.length) return null;
 
@@ -14,6 +16,7 @@ export function DestinationPicker({ destinations, className = '' }: { destinatio
       </svg>
       <span className="hidden sm:inline">Ship to</span>
       <select suppressHydrationWarning
+        id={id}
         aria-label="Destination port"
         value={code ?? ''}
         onChange={(e) => setCode(e.target.value || null)}

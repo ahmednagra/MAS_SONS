@@ -8,6 +8,9 @@ const fromEnv = (value: string | undefined) => {
 
 export const SITE = {
   name: 'M.A.S & SONS',
+  /** Display wordmark used in the header, footer, and logo lockup. Legal and invoice name stays `legalName`. */
+  brand: 'MAS',
+  brandDescriptor: 'Vehicles & equipment · Japan',
   legalName: 'M.A.S & SONS 株式会社',
   tagline: 'Used vehicles & heavy equipment · exported from Japan',
   license: '古物商許可 第401210001551',

@@ -86,13 +86,17 @@ class StockSearchParams(BaseModel):
     transmission: Optional[str] = None
     keyword: Optional[str] = Field(default=None, description="Free-text search over make/model/description")
 
+    sort: str = Field(default="newest", pattern="^(newest|price_asc|price_desc|year_desc|mileage_asc|grade_desc)$")
     cursor: Optional[int] = Field(default=None, description="Last-seen unit id from the previous page")
+    cursor_value: Optional[str] = Field(default=None, description="Sort-column value of that last unit (non-newest sorts)")
     limit: int = Field(default=24, ge=1, le=100)
 
 
 class StockListResponse(BaseModel):
     items: List[UnitSummaryResponse]
     next_cursor: Optional[int] = None
+    next_cursor_value: Optional[str] = None
+    total: Optional[int] = Field(default=None, description="Matching units; only computed on the first page")
 
 
 class FacetCount(BaseModel):

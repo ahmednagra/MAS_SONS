@@ -24,9 +24,9 @@ export function CfLink({ unit, destinations }: { unit: UnitSummary; destinations
     <Link
       href={`/request?${params.toString()}`}
       onClick={(e) => e.stopPropagation()}
-      className="text-sm font-medium text-ink underline-offset-4 hover:underline"
+      className="text-xs font-medium text-sub underline-offset-4 transition-colors hover:text-accent hover:underline"
     >
-      {destination ? `C&F to ${destination.primary_port} →` : 'Get quote →'}
+      {destination ? `C&F to ${destination.primary_port}` : 'Get quote'}<span aria-hidden className="ml-1 opacity-0 transition-opacity group-hover:opacity-100">→</span>
     </Link>
   );
 }

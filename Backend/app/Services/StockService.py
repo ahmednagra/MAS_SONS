@@ -4,7 +4,7 @@ from collections import Counter
 from typing import Optional, Sequence
 
 from fastapi import HTTPException, status
-from sqlalchemy import func, or_, select, tuple_
+from sqlalchemy import and_, case, func, or_, select, tuple_
 from sqlalchemy.orm import Session, selectinload
 
 from app.Models import Destination, Feature, Unit, UnitFeature, UnitImage
@@ -29,6 +29,8 @@ INSIGHT_MIN_PEERS = 3          # fewer than this and we widen the scope
 COMPARABLES_LIMIT = 8
 PRICE_POINTS_LIMIT = 40
 GRADE_ORDER = ("5", "4.5", "4", "3.5", "3", "R", "RA")
+GRADE_RANK = {g: i for i, g in enumerate(reversed(GRADE_ORDER))}   # 'RA' -> 0 ... '5' -> 6
+_NO_MILEAGE = 10**9   # sorts unknown mileage last under mileage_asc
 
 
 def _median(values: Sequence[float]) -> Optional[float]:
@@ -87,19 +89,60 @@ class StockService:
             pattern = f"%{params.keyword}%"
             stmt = stmt.where(or_(Unit.make.ilike(pattern), Unit.model.ilike(pattern), Unit.description.ilike(pattern)))
 
-        if params.cursor is not None:
-            stmt = stmt.where(Unit.id < params.cursor)
+        # First page only: a bounded count so the client can say "1-24 of N".
+        total = None
+        if params.cursor is None:
+            total = int(db.execute(select(func.count()).select_from(stmt.order_by(None).subquery())).scalar_one())
 
-        stmt = stmt.order_by(Unit.id.desc()).limit(params.limit + 1)
+        # Keyset pagination on (sort column, id): the cursor carries both so pages never
+        # skip or repeat rows even when many units share a price or year.
+        sort_col, descending, cast = StockService._sort_column(params.sort)
+        if params.cursor is not None:
+            if sort_col is None:
+                stmt = stmt.where(Unit.id < params.cursor)
+            elif params.cursor_value is not None:
+                value = cast(params.cursor_value)
+                step = sort_col < value if descending else sort_col > value
+                stmt = stmt.where(or_(step, and_(sort_col == value, Unit.id < params.cursor)))
+        order = [Unit.id.desc()] if sort_col is None else [sort_col.desc() if descending else sort_col.asc(), Unit.id.desc()]
+        stmt = stmt.order_by(*order).limit(params.limit + 1)
 
         rows = db.execute(stmt).scalars().all()
         has_more = len(rows) > params.limit
         page = rows[: params.limit]
+        last = page[-1] if has_more and page else None
 
         return StockListResponse(
             items=StockService._summaries_with_thumbnails(page, db),
-            next_cursor=page[-1].id if has_more and page else None,
+            next_cursor=last.id if last else None,
+            next_cursor_value=StockService._sort_value(params.sort, last) if last and sort_col is not None else None,
+            total=total,
         )
+
+    @staticmethod
+    def _sort_column(sort: str):
+        """(column expression, descending, cursor-value parser) for a sort key; None column means id order."""
+        if sort == "price_asc":
+            return Unit.price_usd, False, float
+        if sort == "price_desc":
+            return Unit.price_usd, True, float
+        if sort == "year_desc":
+            return Unit.year, True, int
+        if sort == "mileage_asc":
+            return func.coalesce(Unit.mileage_km, _NO_MILEAGE), False, int
+        if sort == "grade_desc":
+            return case(GRADE_RANK, value=Unit.auction_grade, else_=0), True, int
+        return None, True, int
+
+    @staticmethod
+    def _sort_value(sort: str, unit: Unit) -> str:
+        if sort in ("price_asc", "price_desc"):
+            return str(float(unit.price_usd))
+        if sort == "year_desc":
+            return str(unit.year)
+        if sort == "mileage_asc":
+            return str(unit.mileage_km if unit.mileage_km is not None else _NO_MILEAGE)
+        return str(GRADE_RANK.get(unit.auction_grade, 0))
 
     @staticmethod
     def _summaries_with_thumbnails(units: Sequence[Unit], db: Session) -> list[UnitSummaryResponse]:

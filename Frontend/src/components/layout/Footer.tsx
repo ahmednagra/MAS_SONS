@@ -27,8 +27,8 @@ export function Footer({ destinations = [] }: { destinations?: Destination[] }) 
 
   return (
     <footer className="border-t border-line bg-surface">
-      <div className="mx-auto max-w-[1200px] px-4 py-12">
-        <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
+      <div className="mx-auto max-w-[1200px] px-4 py-10">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,2.4fr)]">
           {/* Brand + the trust facts a buyer wiring money abroad actually checks. */}
           <div>
             <Brand variant="footer" />
@@ -45,6 +45,8 @@ export function Footer({ destinations = [] }: { destinations?: Destination[] }) 
             </ul>
           </div>
 
+          <div className="flex flex-col gap-8">
+          <div className="grid gap-8 sm:grid-cols-3">
           <FooterList title="Browse" links={BROWSE} />
           <FooterList title="Company" links={COMPANY} />
 
@@ -67,33 +69,37 @@ export function Footer({ destinations = [] }: { destinations?: Destination[] }) 
               </li>
             </ul>
           </div>
+          </div>
+
+          {destinations.length > 0 && (
+            <section aria-labelledby="footer-ports" className="border-t border-line pt-5">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                <h3 id="footer-ports" className="font-mono text-[11px] uppercase tracking-[0.16em] text-sub">We ship to</h3>
+                <p className="text-[11px] text-sub">Typical sailing days from Japan · C&amp;F quoted per port</p>
+              </div>
+              <ul className="mt-3 flex flex-wrap gap-x-2 gap-y-2">
+                {destinations.map((d) => (
+                  <li key={d.country_code}>
+                    <Link
+                      href={`/destinations/${d.country_code}`}
+                      title={d.shipping_mode ? `${d.country_name} · ${MODE_LABEL[d.shipping_mode]}` : d.country_name}
+                      className="inline-flex items-baseline gap-1.5 rounded-sm border border-line bg-paper px-2.5 py-1 text-[13px] text-ink transition-colors hover:border-accent hover:text-accent"
+                    >
+                      <span className="font-medium">{d.primary_port}</span>
+                      <span className="text-sub">{d.country_code}</span>
+                      {d.estimated_transit_days != null && (
+                        <span className="font-mono text-[10.5px] tabular-nums text-sub">{d.estimated_transit_days}d</span>
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+          </div>
         </div>
 
-        {destinations.length > 0 && (
-          <section aria-labelledby="footer-ports" className="mt-12 border-t border-line pt-8">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h3 id="footer-ports" className="font-mono text-[11px] uppercase tracking-[0.16em] text-sub">We ship to</h3>
-              <p className="text-xs text-sub">Typical sailing time from Japan · C&amp;F quoted per port</p>
-            </div>
-            <ul className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3 lg:grid-cols-4">
-              {destinations.map((d) => (
-                <li key={d.country_code}>
-                  <Link href={`/destinations/${d.country_code}`} className="group flex items-baseline justify-between gap-3 border-b border-line pb-2 text-sm">
-                    <span className="text-ink underline-offset-4 group-hover:underline">
-                      {d.primary_port}<span className="text-sub">, {d.country_name}</span>
-                    </span>
-                    <span className="whitespace-nowrap font-mono text-[11px] tabular-nums text-sub">
-                      {d.estimated_transit_days != null ? `≈${d.estimated_transit_days}d` : ''}
-                      {d.shipping_mode ? ` · ${MODE_LABEL[d.shipping_mode]}` : ''}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        <div className="mt-10 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-line pt-5 text-xs text-sub">
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-line pt-5 text-xs text-sub">
           <span>© {SITE.legalName}</span>
           <nav aria-label="Legal" className="flex flex-wrap gap-x-5 gap-y-1">
             <Link href="/privacy" className="underline-offset-4 hover:text-ink hover:underline">Privacy</Link>

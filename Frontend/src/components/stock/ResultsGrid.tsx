@@ -9,14 +9,17 @@ export function ResultsGrid({
   units,
   destinations,
   nowMs,
+  dense = false,
 }: {
   units: UnitSummary[];
   destinations?: Destination[];
   nowMs?: number;
+  /** Four columns beside a sidebar on wide screens (stock page); landing pages keep auto-fill. */
+  dense?: boolean;
 }) {
   if (!units.length) return <p className="text-sub">No units match your search.</p>;
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
+    <div className={dense ? 'grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4' : 'grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4'}>
       {units.map((unit, index) => (
         <UnitCard key={unit.id} unit={unit} priority={index < ABOVE_FOLD_COUNT} destinations={destinations} nowMs={nowMs} />
       ))}

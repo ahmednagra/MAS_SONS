@@ -4,7 +4,7 @@ import type { StockFacets } from '@/types/stock';
 
 const GRADES = ['5', '4.5', '4', '3.5', '3'] as const;
 
-const field = 'mt-1.5 w-full rounded-sm border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-sub focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-1';
+const field = 'mt-1 w-full rounded-sm border border-line bg-surface px-2.5 py-1.5 text-sm text-ink placeholder:text-sub focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-1';
 const label = 'block font-mono text-[10.5px] uppercase tracking-[0.14em] text-sub';
 
 export const FINDER_KEYS = [
@@ -40,16 +40,16 @@ export function StockFinder({ facets, yearNow, values = {} }: { facets: StockFac
         id="stock-filters-panel"
         action="/stock"
         method="get"
-        className="mt-3 hidden rounded-sm border border-line bg-surface p-5 text-ink peer-checked:block lg:mt-0 lg:block"
+        className="mt-3 hidden rounded-sm border border-line bg-surface p-4 text-ink peer-checked:block lg:mt-0 lg:flex lg:max-h-[calc(100vh-128px)] lg:flex-col lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:pr-2"
       >
-        <div className="mb-4 flex items-baseline justify-between gap-3">
+        <div className="mb-3 flex items-baseline justify-between gap-3 border-b border-line pb-3">
           <h2 className="font-display text-lg leading-none">Filters</h2>
-          <p className="font-mono text-[11px] text-sub">
-            <span className="font-medium text-ink">{facets.total.toLocaleString('en-US')}</span> in stock
+          <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-sub">
+            <span className="text-ink">{facets.total.toLocaleString('en-US')}</span> in stock
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-1">
+        <div className="grid grid-cols-2 gap-2.5 lg:min-h-0 lg:grid-cols-1 lg:overflow-y-auto lg:pr-1">
           <label className="col-span-2 lg:col-span-1">
             <span className={label}>Category</span>
             <select suppressHydrationWarning name="category" className={field} defaultValue={values.category ?? ''}>
@@ -81,7 +81,7 @@ export function StockFinder({ facets, yearNow, values = {} }: { facets: StockFac
             </select>
           </label>
 
-          <fieldset className="col-span-2 grid grid-cols-2 gap-3 lg:col-span-1">
+          <fieldset className="col-span-2 grid grid-cols-2 gap-2.5 lg:col-span-1">
             <legend className={label}>Year</legend>
             <select suppressHydrationWarning name="year_min" aria-label="Year from" className={field} defaultValue={values.year_min ?? ''}>
               <option value="">From</option>
@@ -93,12 +93,13 @@ export function StockFinder({ facets, yearNow, values = {} }: { facets: StockFac
             </select>
           </fieldset>
 
-          <fieldset className="col-span-2 grid grid-cols-2 gap-3 lg:col-span-1">
+          <fieldset className="col-span-2 grid grid-cols-2 gap-2.5 lg:col-span-1">
             <legend className={label}>Price (USD)</legend>
             <input suppressHydrationWarning name="price_min" aria-label="Minimum price" type="number" min={0} step={500} placeholder="Min" defaultValue={values.price_min ?? ''} className={field} />
             <input suppressHydrationWarning name="price_max" aria-label="Maximum price" type="number" min={0} step={500} placeholder="Max" defaultValue={values.price_max ?? ''} className={field} />
           </fieldset>
 
+          <div className="col-span-2 grid grid-cols-2 gap-2.5 lg:col-span-1">
           <label>
             <span className={label}>Steering</span>
             <select suppressHydrationWarning name="steering_position" className={field} defaultValue={values.steering_position ?? ''}>
@@ -114,11 +115,12 @@ export function StockFinder({ facets, yearNow, values = {} }: { facets: StockFac
               {GRADES.map((g) => <option key={g} value={g}>{g} and up</option>)}
             </select>
           </label>
+          </div>
         </div>
 
-        <div className="mt-5 flex items-center justify-between gap-3">
+        <div className="sticky bottom-0 mt-4 flex items-center justify-between gap-3 border-t border-line bg-surface pt-3 pb-1 lg:static lg:bg-transparent lg:pb-0">
           <Link href="/stock" className="text-sm font-medium text-sub underline-offset-4 hover:text-ink hover:underline">Clear</Link>
-          <button type="submit" className="rounded-sm bg-accent px-5 py-2.5 text-sm font-semibold text-accent-ink hover:opacity-90">
+          <button type="submit" className="rounded-sm bg-accent px-5 py-2 text-sm font-semibold text-accent-ink hover:opacity-90">
             Apply filters
           </button>
         </div>
