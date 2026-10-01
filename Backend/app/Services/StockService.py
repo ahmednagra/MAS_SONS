@@ -15,10 +15,13 @@ from app.Schemas.stock import (
     UnitInsightsResponse, UnitPriceUpdate, UnitResponse, UnitSummaryResponse,
 )
 
-# Browse-by-make / body-type tiles are a fixed-size UI element, not a paginated list — cap the GROUP BY output rather than shipping every distinct…
-FACET_MAKES_LIMIT = 12
-FACET_BODY_TYPES_LIMIT = 10
-FACET_FUEL_TYPES_LIMIT = 8
+# These lists feed the storefront's filter <select>s, so they must carry every distinct value in
+# stock — a make missing here is a make the buyer can never filter by. Distinct makes / body
+# types / fuels are small, naturally bounded vocabularies; the caps only guard against runaway
+# GROUP BY output, they are not a "top N" (QA 2026-09-06: the old cap of 12 hid 5 of 17 makes).
+FACET_MAKES_LIMIT = 200
+FACET_BODY_TYPES_LIMIT = 100
+FACET_FUEL_TYPES_LIMIT = 50
 
 # GET /stock/by-ids — a buyer's favorites list is small; this bounds one batch lookup so it can never become an unbounded IN (...) query.
 MAX_BY_IDS = 50
@@ -81,8 +84,13 @@ class StockService:
         if params.transmission:
             conditions["transmission"] = Unit.transmission == params.transmission
         if params.keyword:
-            pattern = f"%{params.keyword}%"
-            conditions["keyword"] = or_(Unit.make.ilike(pattern), Unit.model.ilike(pattern), Unit.description.ilike(pattern))
+            # Escape LIKE metacharacters so "%" / "_" in user input match literally instead of acting as wildcards
+            # (an unescaped "%" matched the whole catalog).
+            escaped = params.keyword.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+            pattern = f"%{escaped}%"
+            conditions["keyword"] = or_(
+                Unit.make.ilike(pattern, escape="\\"), Unit.model.ilike(pattern, escape="\\"), Unit.description.ilike(pattern, escape="\\"),
+            )
         conditions.pop(exclude, None)
         return conditions
 

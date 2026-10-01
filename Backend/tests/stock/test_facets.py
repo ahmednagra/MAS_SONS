@@ -49,3 +49,30 @@ def test_facets_cascade_and_exclude_own_dimension(db):
     assert [m.value for m in narrowed.makes] == [m.value for m in base.makes]
     # Category split ignores the category filter so the picker keeps both options.
     assert narrowed.vehicles + narrowed.equipment >= narrowed.total
+
+
+def test_facets_list_every_make_body_type_and_fuel_in_stock(db):
+    """The lists feed filter <select>s: a value missing here is a value buyers can never filter by."""
+    from sqlalchemy import func
+    from app.Models import Unit
+
+    facets = StockService.facets(db)
+    active = (Unit.deleted_at.is_(None), Unit.status == "in_stock")
+    for column, listed in ((Unit.make, facets.makes), (Unit.body_type, facets.body_types), (Unit.fuel_type, facets.fuel_types)):
+        distinct = db.execute(select(func.count(func.distinct(column))).where(*active, column.is_not(None))).scalar_one()
+        assert len(listed) == distinct, f"{column.key}: {len(listed)} listed, {distinct} distinct in stock"
+
+
+def test_keyword_like_wildcards_are_literal(db):
+    everything = StockService.search(StockSearchParams(), db).total
+    assert StockService.search(StockSearchParams(keyword="%"), db).total == 0
+    assert StockService.search(StockSearchParams(keyword="_"), db).total < everything or everything == 0
+
+
+def test_unknown_grade_or_steering_is_rejected():
+    from pydantic import ValidationError
+    with pytest.raises(ValidationError):
+        StockSearchParams(auction_grade_min="junk")
+    with pytest.raises(ValidationError):
+        StockSearchParams(steering_position="left")
+    assert StockSearchParams(auction_grade_min="4.5", steering_position="RHD").auction_grade_min == "4.5"

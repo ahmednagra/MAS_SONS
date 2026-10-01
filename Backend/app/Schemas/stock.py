@@ -80,8 +80,9 @@ class StockSearchParams(BaseModel):
     price_min: Optional[float] = None
     price_max: Optional[float] = None
     mileage_max_km: Optional[int] = None
-    auction_grade_min: Optional[str] = None
-    steering_position: Optional[str] = None
+    # Constrained so an unknown grade is a 422 instead of silently applying no filter.
+    auction_grade_min: Optional[str] = Field(default=None, pattern=r"^(5|4\.5|4|3\.5|3|R|RA)$")
+    steering_position: Optional[str] = Field(default=None, pattern=r"^(LHD|RHD)$")
     fuel_type: Optional[str] = None
     transmission: Optional[str] = None
     keyword: Optional[str] = Field(default=None, description="Free-text search over make/model/description")
