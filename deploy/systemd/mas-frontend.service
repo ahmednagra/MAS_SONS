@@ -1,0 +1,18 @@
+[Unit]
+Description=M.A.S & SONS Next.js frontend (mas-sons.step-now.de)
+After=network.target mas-backend.service
+Wants=mas-backend.service
+
+[Service]
+User=root
+WorkingDirectory=/root/mas_sons/Frontend
+Environment=NODE_ENV=production
+# API_BASE_URL / NEXT_PUBLIC_SITE_URL come from Frontend/.env.production.local (read by next start).
+# The project's own next binary — never npx, which could fetch a different version.
+ExecStart=/root/mas_sons/Frontend/node_modules/.bin/next start --hostname 127.0.0.1 --port 3100
+Restart=always
+RestartSec=3
+MemoryMax=700M
+
+[Install]
+WantedBy=multi-user.target

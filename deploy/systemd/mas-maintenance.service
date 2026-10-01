@@ -1,0 +1,9 @@
+[Unit]
+Description=M.A.S & SONS daily DB maintenance (monthly partitions for the coming month)
+After=postgresql.service
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/root/mas_sons/Backend
+ExecStart=/root/mas_sons/Backend/.venv/bin/python -m scripts.migrate_db

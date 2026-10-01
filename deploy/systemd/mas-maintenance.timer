@@ -1,0 +1,10 @@
+[Unit]
+Description=Run M.A.S & SONS DB maintenance daily
+
+[Timer]
+OnCalendar=*-*-* 03:45:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

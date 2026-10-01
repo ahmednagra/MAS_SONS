@@ -1,0 +1,20 @@
+[Unit]
+Description=M.A.S & SONS FastAPI backend (mas-sons.step-now.de)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+User=root
+WorkingDirectory=/root/mas_sons/Backend
+# config/settings.py reads Backend/.env by absolute path; nothing secret lives in this unit.
+Environment="PATH=/root/mas_sons/Backend/.venv/bin:/usr/bin:/bin"
+# Loopback only — nginx is the sole public entry. One worker: the WebSocket manager is in-process
+# and REDIS_URL is unset, so a second worker would split realtime fan-out.
+ExecStart=/root/mas_sons/Backend/.venv/bin/uvicorn main:app --host 127.0.0.1 --port 8100 --workers 1 --proxy-headers --forwarded-allow-ips 127.0.0.1
+Restart=always
+RestartSec=3
+# A runaway demo must never starve step-now.de on the same 4 GB box.
+MemoryMax=700M
+
+[Install]
+WantedBy=multi-user.target
